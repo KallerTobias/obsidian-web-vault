@@ -2,7 +2,7 @@
   import { basename, dirname } from '@shared/normalize';
   import { ApiError, api, type RenameResult } from '../lib/api';
   import { flushSaversUnder } from '../lib/editor/save';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import { isValidNoteName } from '../lib/names';
 
   /**
@@ -83,13 +83,13 @@
     // Only a new name is checked: moving `Notiz #1.md` (or renaming nothing) keeps an existing name.
     const changed = n !== originalName;
     if (!n || (changed && !isValidNoteName(n))) {
-      error = de.rename.invalidName;
+      error = t.rename.invalidName;
       return null;
     }
     const dir = folder.trim().replace(/^\/+|\/+$/g, '');
     const to = (dir ? `${dir}/` : '') + n + ext;
     if (kind === 'folder' && to.startsWith(`${path}/`)) {
-      error = de.rename.intoItself;
+      error = t.rename.intoItself;
       return null;
     }
     return to;
@@ -114,7 +114,7 @@
       if (r.skippedReadonly.length + r.conflicts.length + r.failed.length === 0) onClose();
       else result = r;
     } catch (err) {
-      error = err instanceof ApiError || err instanceof Error ? err.message : de.errors.unexpected;
+      error = err instanceof ApiError || err instanceof Error ? err.message : t.errors.unexpected;
     } finally {
       busy = false;
     }
@@ -131,14 +131,14 @@
   }}
 >
   <form onsubmit={submit}>
-    <h2 id="rename-title">{mode === 'rename' ? de.rename.titleRename : de.rename.titleMove}</h2>
+    <h2 id="rename-title">{mode === 'rename' ? t.rename.titleRename : t.rename.titleMove}</h2>
     <p class="path">{path}</p>
 
     {#if result}
       <div role="status">
-        <p><strong>{de.rename.doneTitle}</strong></p>
-        {#if result.updated.length}<p>{de.rename.updated(result.updated.length)}</p>{/if}
-        {#each [{ label: de.rename.skippedReadonly, list: result.skippedReadonly }, { label: de.rename.conflicts, list: result.conflicts }, { label: de.rename.failed, list: result.failed }] as group (group.label)}
+        <p><strong>{t.rename.doneTitle}</strong></p>
+        {#if result.updated.length}<p>{t.rename.updated(result.updated.length)}</p>{/if}
+        {#each [{ label: t.rename.skippedReadonly, list: result.skippedReadonly }, { label: t.rename.conflicts, list: result.conflicts }, { label: t.rename.failed, list: result.failed }] as group (group.label)}
           {#if group.list.length}
             <p class="group-label">{group.label}</p>
             <ul>
@@ -148,17 +148,17 @@
         {/each}
       </div>
       <div class="buttons">
-        <button type="button" class="button-primary" onclick={onClose}>{de.rename.close}</button>
+        <button type="button" class="button-primary" onclick={onClose}>{t.rename.close}</button>
       </div>
     {:else}
       {#if mode === 'rename'}
         <label class="field">
-          <span class="field-label">{de.rename.name}</span>
+          <span class="field-label">{t.rename.name}</span>
           <input bind:this={input} bind:value={name} class="text-input" autocomplete="off" spellcheck="false" />
         </label>
       {:else}
         <label class="field">
-          <span class="field-label">{de.rename.folder}</span>
+          <span class="field-label">{t.rename.folder}</span>
           <input
             bind:this={input}
             bind:value={folder}
@@ -166,31 +166,31 @@
             list={listId}
             autocomplete="off"
             spellcheck="false"
-            placeholder={de.rename.rootFolder}
+            placeholder={t.rename.rootFolder}
             aria-describedby="{listId}-hint"
           />
         </label>
-        <p id="{listId}-hint" class="field-hint">{de.rename.folderHint}</p>
+        <p id="{listId}-hint" class="field-hint">{t.rename.folderHint}</p>
         <datalist id={listId}>
           {#each folders.filter((f) => f !== '') as f (f)}<option value={f}></option>{/each}
         </datalist>
       {/if}
 
       {#if affected === null}
-        <p class="hint">{de.rename.counting}</p>
+        <p class="hint">{t.rename.counting}</p>
       {:else if affected > 0}
         <label class="check">
           <input type="checkbox" bind:checked={updateLinks} />
-          <span>{de.rename.affected(affected)}</span>
+          <span>{t.rename.affected(affected)}</span>
         </label>
       {/if}
 
       {#if error}<p class="error-message" role="alert">{error}</p>{/if}
 
       <div class="buttons">
-        <button type="button" class="link-button" onclick={onClose} disabled={busy}>{de.rename.cancel}</button>
+        <button type="button" class="link-button" onclick={onClose} disabled={busy}>{t.rename.cancel}</button>
         <button type="submit" class="button-primary" disabled={busy || affected === null}>
-          {busy ? de.rename.busy : mode === 'rename' ? de.rename.submitRename : de.rename.submitMove}
+          {busy ? t.rename.busy : mode === 'rename' ? t.rename.submitRename : t.rename.submitMove}
         </button>
       </div>
     {/if}

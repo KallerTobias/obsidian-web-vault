@@ -3,19 +3,19 @@
 </script>
 
 <script lang="ts">
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
 
   /** Bearbeiten (live) / Lesen / Quelltext. */
   let { mode, onChange }: { mode: ViewMode; onChange: (mode: ViewMode) => void } = $props();
 
   const modes: { id: ViewMode; label: string }[] = [
-    { id: 'live', label: de.editor.live },
-    { id: 'reading', label: de.editor.reading },
-    { id: 'source', label: de.editor.source },
+    { id: 'live', label: t.editor.live },
+    { id: 'reading', label: t.editor.reading },
+    { id: 'source', label: t.editor.source },
   ];
 </script>
 
-<div class="mode-switch" role="group" aria-label={de.editor.modes} title={de.editor.modeShortcut}>
+<div class="mode-switch" role="group" aria-label={t.editor.modes} title={t.editor.modeShortcut}>
   {#each modes as m (m.id)}
     <button type="button" aria-pressed={mode === m.id} onclick={() => onChange(m.id)}>{m.label}</button>
   {/each}

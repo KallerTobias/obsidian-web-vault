@@ -3,7 +3,7 @@
   import { onMount } from 'svelte';
   import { lineDiff } from '../lib/editor/diff';
   import { conflictCopyPath, type Conflict } from '../lib/editor/save';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
 
   /**
    * A save conflict: my text vs. the disk version as a line diff, and the three ways out. Modal and
@@ -48,34 +48,34 @@
 </script>
 
 <dialog bind:this={dialog} class="conflict-dialog" aria-labelledby="conflict-title" aria-describedby="conflict-intro" oncancel={(e) => e.preventDefault()}>
-  <h2 id="conflict-title">{de.conflict.title}</h2>
+  <h2 id="conflict-title">{t.conflict.title}</h2>
   <p class="path">{path}</p>
-  <p id="conflict-intro">{conflict.diskVersion === null ? de.conflict.deletedIntro : de.conflict.intro}</p>
+  <p id="conflict-intro">{conflict.diskVersion === null ? t.conflict.deletedIntro : t.conflict.intro}</p>
   <p class="legend">
     <span class="mark mine" aria-hidden="true">−</span>
-    {de.conflict.legendMine}
+    {t.conflict.legendMine}
     <span class="mark disk" aria-hidden="true">+</span>
-    {de.conflict.legendDisk}
+    {t.conflict.legendDisk}
   </p>
   <!-- Scrollable diff: focusable so keyboard users can scroll it. -->
   <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-  <div class="diff" role="region" aria-label={de.conflict.diffLabel} tabindex="0">
+  <div class="diff" role="region" aria-label={t.conflict.diffLabel} tabindex="0">
     {#each diff as line, i (i)}
       <div class="line {line.type}">
         <span class="mark" aria-hidden="true">{line.type === 'mine' ? '−' : line.type === 'disk' ? '+' : ' '}</span>
-        {#if line.type !== 'same'}<span class="visually-hidden">{line.type === 'mine' ? de.conflict.mineMark : de.conflict.diskMark}</span>{/if}
+        {#if line.type !== 'same'}<span class="visually-hidden">{line.type === 'mine' ? t.conflict.mineMark : t.conflict.diskMark}</span>{/if}
         <span class="text">{line.text || ' '}</span>
       </div>
     {/each}
   </div>
-  <p class="hint">{de.conflict.keepBothHint(copyName)}</p>
-  {#if failed}<p class="error-message" role="alert">{de.conflict.failed}</p>{/if}
+  <p class="hint">{t.conflict.keepBothHint(copyName)}</p>
+  {#if failed}<p class="error-message" role="alert">{t.conflict.failed}</p>{/if}
   <div class="buttons">
-    <button type="button" class="link-button" disabled={busy} onclick={() => choose('both')}>{de.conflict.keepBoth}</button>
-    <button type="button" class="link-button" disabled={busy} onclick={() => choose('disk')}>{de.conflict.keepDisk}</button>
-    <button type="button" class="button-primary" disabled={busy} onclick={() => choose('mine')}>{de.conflict.keepMine}</button>
+    <button type="button" class="link-button" disabled={busy} onclick={() => choose('both')}>{t.conflict.keepBoth}</button>
+    <button type="button" class="link-button" disabled={busy} onclick={() => choose('disk')}>{t.conflict.keepDisk}</button>
+    <button type="button" class="button-primary" disabled={busy} onclick={() => choose('mine')}>{t.conflict.keepMine}</button>
   </div>
-  {#if busy}<p class="hint" role="status">{de.conflict.busy}</p>{/if}
+  {#if busy}<p class="hint" role="status">{t.conflict.busy}</p>{/if}
 </dialog>
 
 <style>

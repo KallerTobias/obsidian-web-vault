@@ -25,10 +25,16 @@ Typical use: your vault lives on a server (synced with Syncthing, Git, or touche
 - Templates, daily notes, paste/drag images into notes.
 - Safe next to other writers (Syncthing, Obsidian, AI agents, Git): file watcher with live updates, atomic writes, and **no silent overwrite** - a save based on an outdated version is rejected and you get a conflict dialog.
 - Delete moves files to `.trash/` inside the vault; nothing is removed permanently.
+- UI in English, German, Spanish, French and Italian, selectable per device (see [Languages](#languages)).
 - Single small Docker image (~240 MB, Alpine, runs unprivileged), `linux/amd64` and `linux/arm64`.
 
-> [!IMPORTANT]
-> **The user interface is currently German only.** All UI strings live in [`web/src/lib/i18n/de.ts`](web/src/lib/i18n/de.ts), so a translation is mostly a matter of adding a language file; pull requests are welcome.
+### Languages
+
+The UI is available in **English, German, Spanish, French and Italian**. The language is chosen per device (stored in the browser) under Settings (gear icon, top right) or on the login screen. The default, *Automatic*, follows the browser language and falls back to English. Switching saves pending changes and reloads the page.
+
+The UI language also names what the app creates: a new note is called `Untitled.md` in English and `Unbenannt.md` in German (likewise `Untitled folder` for new folders), just like Obsidian does it. Existing files are never renamed.
+
+Translations are welcome: add a new file next to the existing packs in [`web/src/lib/i18n/`](web/src/lib/i18n/) (German, [`de.ts`](web/src/lib/i18n/de.ts), is the source of all strings and defines their shape) and register it in [`index.ts`](web/src/lib/i18n/index.ts).
 
 ## Setup guide
 
@@ -247,7 +253,7 @@ docker compose pull
 docker compose up -d
 ```
 
-Passkeys, sessions and settings live in the `/data` volume and survive updates. Pin a version tag (e.g. `ghcr.io/kallertobias/obsidian-web-vault:1.0.0-beta`) instead of `latest` if you want to update deliberately.
+Passkeys, sessions and settings live in the `/data` volume and survive updates. Pin a version tag (e.g. `ghcr.io/kallertobias/obsidian-web-vault:1.0.1-beta`) instead of `latest` if you want to update deliberately.
 
 ## Backups
 
@@ -259,12 +265,12 @@ Passkeys, sessions and settings live in the `/data` volume and survive updates. 
 | Symptom | Cause and fix |
 | --- | --- |
 | Container exits right after start | Read `docker compose logs`. Usually the vault path is wrong or not readable/writable for `PUID:PGID` (step 1). |
-| No passkey offered, or "Anfrage von fremder Herkunft abgelehnt" | You opened the app under a different address than `PUBLIC_URL` (e.g. an IP address instead of the domain, or `127.0.0.1` instead of `localhost`). The app shows a notice with a link to the right address. |
+| No passkey offered, or "Request from a foreign origin rejected" (German UI: "Anfrage von fremder Herkunft abgelehnt") | You opened the app under a different address than `PUBLIC_URL` (e.g. an IP address instead of the domain, or `127.0.0.1` instead of `localhost`). The app shows a notice with a link to the right address. |
 | Passkey dialog fails on plain `http://` | Passkeys need HTTPS (except `localhost`). Use the HTTPS address. |
-| "Zu viele Versuche" (HTTP 429) on login | Rate limit (10 per minute per client IP). Behind a proxy without `TRUST_PROXY`, all users share one IP; see step 7. |
+| "Too many attempts" (HTTP 429; German UI: "Zu viele Versuche") on login | Rate limit (10 per minute per client IP). Behind a proxy without `TRUST_PROXY`, all users share one IP; see step 7. |
 | Changed the domain, passkeys stopped working | Passkeys are bound to the domain. Run `docker exec -it obsidian-web-vault obsidian-web-vault reset-passkeys` and register again. |
-| Notes missing in search, log shows `Datei nicht lesbar` | File permissions: those files are not readable for `PUID:PGID`. |
-| A note shows "Diese Datei ist nicht UTF-8-kodiert" | The file is not valid UTF-8; the app refuses to edit it so it can never be re-encoded. Convert it to UTF-8. |
+| Notes missing in search, log shows `Datei nicht lesbar` ("file not readable"; server logs are in German) | File permissions: those files are not readable for `PUID:PGID`. |
+| A note shows "This file is not UTF-8 encoded" (German UI: "Diese Datei ist nicht UTF-8-kodiert") | The file is not valid UTF-8; the app refuses to edit it so it can never be re-encoded. Convert it to UTF-8. |
 | Live updates do not arrive | Your proxy buffers responses. Disable buffering for the app (see the nginx example). |
 | Lost all passkeys | `docker exec obsidian-web-vault obsidian-web-vault setup-link` on the host. |
 

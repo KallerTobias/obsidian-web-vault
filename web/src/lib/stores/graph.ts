@@ -29,8 +29,8 @@ export interface GraphSettingsStore extends Readable<GraphSettings> {
   load(): Promise<void>;
   /** Applies a change now and saves it after `SAVE_DELAY_MS`. */
   update(patch: Partial<GraphSettings>): void;
-  /** Saves a waiting change right away. */
-  flush(): void;
+  /** Saves a waiting change right away; resolves when that save has settled (succeeded or failed). */
+  flush(): Promise<void>;
 }
 
 export interface GraphSettingsDeps {
@@ -46,12 +46,15 @@ export function createGraphSettings(
   store.subscribe((s) => (current = s));
   let timer: ReturnType<typeof setTimeout> | undefined;
 
-  function save(): void {
+  function save(): Promise<void> {
     clearTimeout(timer);
     timer = undefined;
-    deps.save(current).catch(() => {
-      /* offline or expired session (the API client reports that): the change stays for this session */
-    });
+    return deps.save(current).then(
+      () => {},
+      () => {
+        /* offline or expired session (the API client reports that): the change stays for this session */
+      },
+    );
   }
 
   return {
@@ -63,10 +66,10 @@ export function createGraphSettings(
     update(patch) {
       store.set({ ...current, ...patch });
       clearTimeout(timer);
-      timer = setTimeout(save, SAVE_DELAY_MS);
+      timer = setTimeout(() => void save(), SAVE_DELAY_MS);
     },
-    flush() {
-      if (timer !== undefined) save();
+    async flush() {
+      if (timer !== undefined) await save();
     },
   };
 }

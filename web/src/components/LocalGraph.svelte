@@ -4,7 +4,7 @@
   import type { GraphData, Settings } from '../lib/api';
   import { filterGraph, localGraph } from '../lib/graph/data';
   import GraphCanvas from '../lib/graph/GraphCanvas.svelte';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import { DEFAULT_GRAPH_SETTINGS } from '../lib/stores/graph';
 
   /**
@@ -53,13 +53,13 @@
         mode="2d"
         {highlight}
         fit
-        label={highlight ? de.graph.localLabel(basename(highlight).replace(/\.md$/i, '')) : de.graph.label}
+        label={highlight ? t.graph.localLabel(basename(highlight).replace(/\.md$/i, '')) : t.graph.label}
         {onOpen}
       />
     </div>
   {/if}
   {#if shown && linked.length === 0}
-    <p class="hint">{de.localGraph.none}</p>
+    <p class="hint">{t.localGraph.none}</p>
   {/if}
   {#if linked.length > 0}
     <ul class="node-list">

@@ -44,6 +44,8 @@ interface MakeOpts {
   slowHookMs?: number;
   /** Built web app directory to serve. */
   webDir?: string;
+  /** Registers extra routes before the app is ready (e.g. to throw errors the real routes do not). */
+  extraRoutes?: (app: FastifyInstance) => void;
 }
 
 async function makeApp(opts: MakeOpts = {}): Promise<FastifyInstance> {
@@ -99,6 +101,7 @@ async function makeApp(opts: MakeOpts = {}): Promise<FastifyInstance> {
   });
   routes = [];
   a.addHook('onRoute', (r) => void routes.push(r));
+  opts.extraRoutes?.(a);
   if (opts.slowHookMs) a.addHook('onRequest', async () => void (await new Promise((r) => setTimeout(r, opts.slowHookMs))));
   await a.ready();
   cookie = `vw_session=${await sessions.create({ userAgent: 'test', ip: '127.0.0.1' })}`;
@@ -193,7 +196,7 @@ describe('default deny', () => {
         ...(['POST', 'PUT'].includes(method) ? { payload: {} } : {}),
       });
       expect(res.statusCode, key).toBe(401);
-      if (method !== 'HEAD') expect(res.json(), key).toEqual({ error: 'Nicht angemeldet' });
+      if (method !== 'HEAD') expect(res.json(), key).toEqual({ error: 'Nicht angemeldet', code: 'UNAUTHENTICATED' });
     }
   });
 
@@ -224,6 +227,7 @@ describe('notes', () => {
     const res = await get('/api/note?path=Latin.md');
     expect(res.statusCode).toBe(415);
     expect(res.json().error).toMatch(/nicht UTF-8/);
+    expect(res.json().code).toBe('NOT_UTF8');
     const write = await send('PUT', '/api/note?path=Latin.md', { content: 'neu', baseVersion: sha(latin1) });
     expect(write.statusCode).toBe(415);
     expect((await readFile(join(vaultDir, 'Latin.md'))).equals(latin1)).toBe(true);
@@ -237,17 +241,20 @@ describe('notes', () => {
     for (const p of ['../../etc/passwd', '/etc/passwd', 'a/../../x.md']) {
       const res = await get(`/api/note?path=${q(p)}`);
       expect(res.statusCode, p).toBe(400);
+      expect(res.json().code, p).toBe('INVALID_PATH');
       expect(res.body).not.toContain(base);
     }
     for (const p of ['.git/config', '.obsidian/app.json', 'a/.hidden.md']) {
       const res = await get(`/api/note?path=${q(p)}`);
       expect(res.statusCode, p).toBe(404);
+      // Hidden paths look exactly like missing ones (no HIDDEN/EXCLUDED code that would reveal them).
+      expect(res.json(), p).toEqual({ error: 'Nicht gefunden', code: 'NOT_FOUND' });
     }
     const missing = await get('/api/note?path=gibtsnicht.md');
     expect(missing.statusCode).toBe(404);
     expect(missing.body).not.toContain(base);
     await mkdir(join(vaultDir, 'Ordner'));
-    expect((await get('/api/note?path=Ordner')).statusCode).toBe(400);
+    expect((await get('/api/note?path=Ordner')).json()).toEqual({ error: 'Pfad ist keine Datei', code: 'NOT_A_FILE' });
     expect((await get('/api/note')).statusCode).toBe(400);
     expect((await get(`/api/note?path=${'a'.repeat(1025)}`)).statusCode).toBe(400);
   });
@@ -255,10 +262,12 @@ describe('notes', () => {
   it('refuses to load non-text files (400) and files over 10 MB (413) as notes', async () => {
     await put('bild.png', randomBytes(10));
     expect((await get('/api/note?path=bild.png')).statusCode).toBe(400);
+    expect((await get('/api/note?path=bild.png')).json().code).toBe('NOT_TEXT');
     await put('x.bin', 'x');
     expect((await get('/api/note?path=x.bin')).statusCode).toBe(400);
     await put('Riesig.md', Buffer.alloc(10 * 1024 * 1024 + 1, 'a'));
     expect((await get('/api/note?path=Riesig.md')).statusCode).toBe(413);
+    expect((await get('/api/note?path=Riesig.md')).json().code).toBe('FILE_TOO_LARGE');
     await put('t.txt', 'text');
     expect((await get('/api/note?path=t.txt')).json().content).toBe('text');
   });
@@ -280,6 +289,7 @@ describe('notes', () => {
     expect(res.statusCode).toBe(409);
     expect(res.json()).toEqual({
       error: expect.any(String),
+      code: 'CONFLICT',
       diskContent: 'extern geändert',
       diskVersion: sha('extern geändert'),
     });
@@ -323,6 +333,7 @@ describe('notes', () => {
     expect((await get('/api/note?path=Archiv/A.md')).json().readonly).toBe(true);
     const res = await send('PUT', '/api/note?path=Archiv/A.md', { content: 'b', baseVersion: sha('a') });
     expect(res.statusCode).toBe(403);
+    expect(res.json()).toEqual({ error: 'Pfad ist schreibgeschützt', code: 'READONLY' });
     expect((await send('POST', '/api/note', { path: 'Archiv/B.md', content: '' })).statusCode).toBe(403);
   });
 
@@ -383,9 +394,10 @@ describe('folders, rename, trash', () => {
     const self = await send('POST', '/api/rename', { from: 'Ordner', to: 'Ordner/Unter', updateLinks: true });
     expect(self.statusCode).toBe(400);
     expect(self.json().error).toMatch(/sich selbst/);
+    expect(self.json().code).toBe('MOVE_INTO_SELF');
     const exists = await send('POST', '/api/rename', { from: 'Ordner/A.md', to: 'B.md', updateLinks: true });
     expect(exists.statusCode).toBe(409);
-    expect(Object.keys(exists.json())).toEqual(['error']);
+    expect(exists.json()).toEqual({ error: 'Ziel existiert bereits', code: 'TARGET_EXISTS' });
     const underFile = await send('POST', '/api/rename', { from: 'Ordner/A.md', to: 'B.md/A.md', updateLinks: true });
     expect([400, 409]).toContain(underFile.statusCode);
     expect(underFile.body).not.toContain(base);
@@ -403,6 +415,7 @@ describe('folders, rename, trash', () => {
       const note = await send('POST', '/api/note', { path: `Ordner/${bad}.md`, content: '' });
       expect(note.statusCode).toBe(400);
       expect(note.json().error).toMatch(/darf keines dieser Zeichen enthalten/);
+      expect(note.json().code).toBe('INVALID_NAME');
       const folder = await send('POST', '/api/folder', { path: `Ordner/${bad}` });
       expect(folder.statusCode).toBe(400);
       expect(await readdir(vaultDir)).toEqual([]);
@@ -412,6 +425,7 @@ describe('folders, rename, trash', () => {
       const note = await send('POST', '/api/note', { path: `${bad}/Neu/x.md`, content: '' });
       expect(note.statusCode).toBe(400);
       expect(note.json().error).toMatch(/darf keines dieser Zeichen enthalten/);
+      expect(note.json().code).toBe('INVALID_NAME');
       const folder = await send('POST', '/api/folder', { path: `Neu/${bad}/Unter` });
       expect(folder.statusCode).toBe(400);
       expect(await readdir(vaultDir)).toEqual([]);
@@ -429,6 +443,7 @@ describe('folders, rename, trash', () => {
       const file = await send('POST', '/api/rename', { from: 'A.md', to: `${bad}.md`, updateLinks: true });
       expect(file.statusCode).toBe(400);
       expect(file.json().error).toMatch(/darf keines dieser Zeichen enthalten/);
+      expect(file.json().code).toBe('INVALID_NAME');
       const folder = await send('POST', '/api/rename', { from: 'Ordner', to: bad, updateLinks: true });
       expect(folder.statusCode).toBe(400);
       expect(await disk('A.md')).toBe('a');
@@ -531,7 +546,7 @@ describe('GET /api/file', () => {
     expect(bad.statusCode).toBe(416);
     expect(bad.headers['content-range']).toBe('bytes */10');
     expect(bad.headers['content-disposition']).toBeUndefined();
-    expect(bad.json()).toEqual({ error: expect.any(String) });
+    expect(bad.json()).toEqual({ error: expect.any(String), code: 'INVALID_RANGE' });
     expect((await get('/api/file?path=v.mp4')).headers['accept-ranges']).toBe('bytes');
   });
 
@@ -692,6 +707,21 @@ describe('index routes', () => {
   });
 });
 
+describe('generic error answers', () => {
+  it('a 429 that is not the login rate limit has its own code', async () => {
+    await app.close();
+    app = await makeApp({
+      extraRoutes: (a) =>
+        a.get('/boom-429', async () => {
+          throw Object.assign(new Error('busy'), { statusCode: 429 });
+        }),
+    });
+    const res = await app.inject({ method: 'GET', url: '/boom-429' });
+    expect(res.statusCode).toBe(429);
+    expect(res.json()).toEqual({ error: 'Zu viele Anfragen', code: 'TOO_MANY_REQUESTS' });
+  });
+});
+
 describe('settings', () => {
   it('answers store errors (DATA_DIR) with a logged 500, not a vault status', async () => {
     const file = join(dataDir, 'settings.json');
@@ -700,7 +730,7 @@ describe('settings', () => {
     await chmod(file, 0);
     const res = await get('/api/settings');
     expect(res.statusCode).toBe(500);
-    expect(res.json()).toEqual({ error: 'Interner Fehler' });
+    expect(res.json()).toEqual({ error: 'Interner Fehler', code: 'INTERNAL' });
     await chmod(file, 0o600);
   });
 
@@ -782,7 +812,7 @@ describe('SSE /api/events', () => {
     }
     const over = await fetch(url, { headers: { cookie } });
     expect(over.status).toBe(429);
-    expect(await over.json()).toEqual({ error: expect.stringMatching(/Zu viele offene Verbindungen/) });
+    expect(await over.json()).toEqual({ error: expect.stringMatching(/Zu viele offene Verbindungen/), code: 'TOO_MANY_STREAMS' });
     // another session is not affected
     const other = `vw_session=${await deps.sessions.create({ userAgent: 'x', ip: '127.0.0.1' })}`;
     const s2 = await open({ cookie: other });
@@ -838,7 +868,7 @@ describe('SSE /api/events', () => {
     s.close();
     const res = await fetch(url);
     expect(res.status).toBe(401);
-    expect(await res.json()).toEqual({ error: 'Nicht angemeldet' });
+    expect(await res.json()).toEqual({ error: 'Nicht angemeldet', code: 'UNAUTHENTICATED' });
     await waitFor(() => activeSubs === 0);
   });
 
@@ -916,10 +946,10 @@ describe('web app (static files + SPA fallback)', () => {
   it('keeps unknown /api URLs as JSON errors (401 without session, 404 with)', async () => {
     const res = await anon('/api/unbekannt');
     expect(res.statusCode).toBe(401);
-    expect(res.json()).toEqual({ error: 'Nicht angemeldet' });
+    expect(res.json()).toEqual({ error: 'Nicht angemeldet', code: 'UNAUTHENTICATED' });
     const authed = await get('/api/unbekannt', { accept: 'text/html' });
     expect(authed.statusCode).toBe(404);
-    expect(authed.json()).toEqual({ error: 'Nicht gefunden' });
+    expect(authed.json()).toEqual({ error: 'Nicht gefunden', code: 'NOT_FOUND' });
     expect((await anon('/api')).statusCode).toBe(401);
   });
 
@@ -928,13 +958,13 @@ describe('web app (static files + SPA fallback)', () => {
     expect((await anon('/assets/fehlt.js', '*/*')).statusCode).toBe(404);
     const post = await app.inject({ method: 'POST', url: '/setup', headers: { origin: ORIGIN, accept: 'text/html' } });
     expect(post.statusCode).toBe(404);
-    expect(post.json()).toEqual({ error: 'Nicht gefunden' });
+    expect(post.json()).toEqual({ error: 'Nicht gefunden', code: 'NOT_FOUND' });
   });
 
   it('serves nothing when the directory has no index.html', async () => {
     await app.close();
     app = await makeApp({ webDir: join(base, 'fehlt') });
     expect((await anon('/')).statusCode).toBe(404);
-    expect((await anon('/setup')).json()).toEqual({ error: 'Nicht gefunden' });
+    expect((await anon('/setup')).json()).toEqual({ error: 'Nicht gefunden', code: 'NOT_FOUND' });
   });
 });

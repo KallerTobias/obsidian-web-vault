@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import { de } from './i18n/de';
+import { t } from './i18n';
 import { fuzzyScore } from './fuzzy';
 import { activeNote, type ActiveNote } from './stores/active-note';
 import { cycleTheme } from './stores/theme';
@@ -48,19 +48,19 @@ const action = (name: keyof CommandActions): (() => void | Promise<void>) => {
 const setMode = (mode: ActiveNote['mode']) => () => get(activeNote)?.setMode(mode);
 
 export const commands: Command[] = [
-  { id: 'new-note', name: de.commands.newNote, run: action('newNote') },
-  { id: 'new-note-template', name: de.commands.newNoteFromTemplate, run: action('newNoteFromTemplate') },
-  { id: 'daily-note', name: de.commands.dailyNote, run: action('openDailyNote') },
-  { id: 'graph', name: de.commands.graph, run: () => workspace.openGraph() },
-  { id: 'search', name: de.commands.search, hotkey: 'Mod-Shift-f', run: action('openSearch') },
-  { id: 'rename', name: de.commands.rename, run: action('renameCurrent') },
-  { id: 'delete', name: de.commands.delete, run: action('deleteCurrent') },
-  { id: 'mode-reading', name: de.commands.modeReading, run: setMode('reading') },
-  { id: 'mode-live', name: de.commands.modeLive, run: setMode('live') },
-  { id: 'mode-source', name: de.commands.modeSource, run: setMode('source') },
-  { id: 'theme', name: de.commands.theme, run: () => void cycleTheme() },
-  { id: 'settings', name: de.commands.settings, run: () => workspace.openSettings() },
-  { id: 'logout', name: de.commands.logout, run: action('logout') },
+  { id: 'new-note', name: t.commands.newNote, run: action('newNote') },
+  { id: 'new-note-template', name: t.commands.newNoteFromTemplate, run: action('newNoteFromTemplate') },
+  { id: 'daily-note', name: t.commands.dailyNote, run: action('openDailyNote') },
+  { id: 'graph', name: t.commands.graph, run: () => workspace.openGraph() },
+  { id: 'search', name: t.commands.search, hotkey: 'Mod-Shift-f', run: action('openSearch') },
+  { id: 'rename', name: t.commands.rename, run: action('renameCurrent') },
+  { id: 'delete', name: t.commands.delete, run: action('deleteCurrent') },
+  { id: 'mode-reading', name: t.commands.modeReading, run: setMode('reading') },
+  { id: 'mode-live', name: t.commands.modeLive, run: setMode('live') },
+  { id: 'mode-source', name: t.commands.modeSource, run: setMode('source') },
+  { id: 'theme', name: t.commands.theme, run: () => void cycleTheme() },
+  { id: 'settings', name: t.commands.settings, run: () => workspace.openSettings() },
+  { id: 'logout', name: t.commands.logout, run: action('logout') },
 ];
 
 /** Commands matching `query` (fuzzy on the name), best first; all of them in their order for an empty query. */
@@ -80,7 +80,7 @@ export function formatHotkey(hotkey: string, mac = /Mac|iPhone|iPad/.test(global
   const mods = new Set(parts);
   const letter = key.length === 1 ? key.toUpperCase() : key;
   if (mac) return (mods.has('Alt') ? '⌥' : '') + (mods.has('Shift') ? '⇧' : '') + (mods.has('Mod') ? '⌘' : '') + letter;
-  return [mods.has('Mod') && de.keys.mod, mods.has('Alt') && de.keys.alt, mods.has('Shift') && de.keys.shift, letter]
+  return [mods.has('Mod') && t.keys.mod, mods.has('Alt') && t.keys.alt, mods.has('Shift') && t.keys.shift, letter]
     .filter(Boolean)
     .join('+');
 }

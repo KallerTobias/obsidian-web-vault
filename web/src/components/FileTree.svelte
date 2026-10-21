@@ -27,7 +27,7 @@
 <script lang="ts">
   import { dirname, joinPath } from '@shared/normalize';
   import { ApiError, api, type RenameResult, type TreeEntry } from '../lib/api';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import {
     displayName,
     findEntry,
@@ -311,7 +311,7 @@
   }
 
   function fail(err: unknown): void {
-    actionError = de.files.actionFailed(err instanceof Error ? err.message : String(err));
+    actionError = t.files.actionFailed(err instanceof Error ? err.message : String(err));
   }
 
   /** Set while the menu is being prepared (templates load): a second trigger must not open another. */
@@ -325,15 +325,15 @@
     const folderReadonly = findEntry(root, folder)?.readonly ?? false;
     const isRoot = entry.path === '';
     const items: MenuItem[] = [
-      { label: de.files.newNote, action: () => void newNote(folder), disabled: folderReadonly },
-      { label: de.files.newNoteFromTemplate, action: () => (picker = { folder }), disabled: folderReadonly },
-      { label: de.files.newFolder, action: () => void newFolder(folder), disabled: folderReadonly },
+      { label: t.files.newNote, action: () => void newNote(folder), disabled: folderReadonly },
+      { label: t.files.newNoteFromTemplate, action: () => (picker = { folder }), disabled: folderReadonly },
+      { label: t.files.newFolder, action: () => void newFolder(folder), disabled: folderReadonly },
     ];
     if (!isRoot) {
       items.push(
-        { label: de.files.rename, disabled: entry.readonly, action: () => (dialog = { path: entry.path, kind: entry.kind, mode: 'rename' }) },
-        { label: de.files.move, disabled: entry.readonly, action: () => (dialog = { path: entry.path, kind: entry.kind, mode: 'move' }) },
-        { label: de.files.delete, disabled: entry.readonly, danger: true, action: () => void trash(entry) },
+        { label: t.files.rename, disabled: entry.readonly, action: () => (dialog = { path: entry.path, kind: entry.kind, mode: 'rename' }) },
+        { label: t.files.move, disabled: entry.readonly, action: () => (dialog = { path: entry.path, kind: entry.kind, mode: 'move' }) },
+        { label: t.files.delete, disabled: entry.readonly, danger: true, action: () => void trash(entry) },
       );
     }
     menu = { x, y, entry, items };
@@ -359,7 +359,7 @@
 
   async function newNote(folder: string): Promise<void> {
     try {
-      const path = await createUnique(folder, de.files.untitled, '.md', (p) => api.note.create(p, ''));
+      const path = await createUnique(folder, t.files.untitled, '.md', (p) => api.note.create(p, ''));
       if (folder) expandTo(folder);
       cursorPath = path;
       onChanged?.();
@@ -371,7 +371,7 @@
 
   async function newFolder(folder: string): Promise<void> {
     try {
-      const path = await createUnique(folder, de.files.untitledFolder, '', (p) => api.folder.create(p));
+      const path = await createUnique(folder, t.files.untitledFolder, '', (p) => api.folder.create(p));
       if (folder) expandTo(folder);
       cursorPath = path;
       onChanged?.();
@@ -383,7 +383,7 @@
 
   async function trash(entry: TreeEntry): Promise<void> {
     actionError = '';
-    if (!confirm(`${displayName(entry)}\n\n${de.files.trashConfirm}`)) return;
+    if (!confirm(`${displayName(entry)}\n\n${t.files.trashConfirm}`)) return;
     try {
       await api.entry.trash(entry.path);
       onTrashed?.(entry.path);
@@ -462,7 +462,7 @@
     <p class="error-message" role="alert">{actionError}</p>
   {/if}
   {#if rows.length === 0}
-    <p class="empty">{de.files.empty}</p>
+    <p class="empty">{t.files.empty}</p>
   {/if}
   <div
     bind:this={treeEl}
@@ -470,7 +470,7 @@
     class="tree"
     role="tree"
     tabindex="0"
-    aria-label={de.files.treeLabel}
+    aria-label={t.files.treeLabel}
     aria-activedescendant={cursor >= first && cursor < last ? rowId(cursor) : undefined}
     onscroll={() => (scrollTop = treeEl?.scrollTop ?? 0)}
     {onclick}
@@ -512,7 +512,7 @@
 </div>
 
 {#if menu}
-  <ContextMenu x={menu.x} y={menu.y} items={menu.items} label={de.files.menuFor(displayName(menu.entry) || de.appName)} onClose={closeMenu} />
+  <ContextMenu x={menu.x} y={menu.y} items={menu.items} label={t.files.menuFor(displayName(menu.entry) || t.appName)} onClose={closeMenu} />
 {/if}
 
 {#if picker}

@@ -11,7 +11,7 @@
 
 <script lang="ts">
   import { onMount, tick } from 'svelte';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
 
   /**
    * A modal list with a search field (quick switcher, command palette): the caller filters, this shows.
@@ -138,7 +138,7 @@
     <p class="empty" role="status">{emptyText}</p>
   {/if}
   {#if footer}<p class="footer error-message" role="alert">{footer}</p>{/if}
-  <p class="hint">{de.palette.hint}</p>
+  <p class="hint">{t.palette.hint}</p>
 </dialog>
 
 <style>

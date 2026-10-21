@@ -17,6 +17,7 @@ import katex from 'katex';
 import { unified, type Processor } from 'unified';
 import { VFile } from 'vfile';
 import remarkObsidian, { prepareSource, type RenderContext } from './remark-obsidian';
+import { t } from '../i18n';
 
 export { subpathId, type RenderContext } from './remark-obsidian';
 
@@ -263,7 +264,7 @@ const processor = unified()
   .use(remarkMath)
   .use(remarkObsidian)
   // clobberPrefix '' : the sanitizer adds `user-content-` to every id (footnotes included) exactly once.
-  .use(remarkRehype, { allowDangerousHtml: true, clobberPrefix: '', footnoteLabel: 'Fußnoten', footnoteBackLabel: 'Zurück zum Text' })
+  .use(remarkRehype, { allowDangerousHtml: true, clobberPrefix: '', footnoteLabel: t.render.footnotes, footnoteBackLabel: t.render.footnoteBack })
   .use(rehypeTasksAndRaw)
   .use(rehypeSanitize, schema)
   .use(rehypeHardenAndMath)

@@ -2,14 +2,14 @@
   import { onMount } from 'svelte';
   import { api, type SessionInfo } from '../lib/api';
   import { formatDateTime } from '../lib/format';
-  import { de } from '../lib/i18n/de';
+  import { t as messages } from '../lib/i18n';
   import { defaultDeviceName } from '../lib/passkey';
 
   /**
    * Settings section: signed-in browsers. The current session is marked and cannot be ended here
    * (that is what "Abmelden" is for); the others can be ended one by one or all at once.
    */
-  const t = de.settings.sessions;
+  const t = messages.settings.sessions;
 
   let list = $state<SessionInfo[] | null>(null);
   let loadFailed = $state(false);

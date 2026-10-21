@@ -12,19 +12,42 @@ import type { Backlink, GraphData, IndexedNote } from '../../../server/index/vau
 import type { Settings } from '../../../server/store/settings';
 import type { TreeEntry, Version } from '../../../server/vault/files';
 import type { RenameResult } from '../../../server/vault/ops';
+import { t } from './i18n';
 import { session } from './stores/session';
 
 export type { Backlink, GraphData, IndexedNote, RenameResult, SearchHit, Settings, TreeEntry, VaultEvent, Version };
 
-/** A non-2xx answer. `body` is the parsed JSON (e.g. `{ error }`, or the 409 conflict body), else the text. */
+/** Text for a server error code in the UI language; undefined for codes the pack does not know. */
+export function errorText(code: string | undefined): string | undefined {
+  // Server codes are UPPER_CASE; the client's own keys of `errors` (camelCase) are never looked up.
+  if (code === undefined || !/^[A-Z][A-Z0-9_]*$/.test(code)) return undefined;
+  const errors: Record<string, unknown> = t.errors;
+  const text = Object.hasOwn(errors, code) ? errors[code] : undefined;
+  return typeof text === 'string' ? text : undefined;
+}
+
+/**
+ * A non-2xx answer. `body` is the parsed JSON (e.g. `{ error, code }`, or the 409 conflict body),
+ * else the text. `message` is the text for the user: the translation of `code` if there is one,
+ * else the server's (German) `error`.
+ */
 export class ApiError extends Error {
+  /** Machine-readable reason from the server (`CONFLICT`, `READONLY` …), if any. */
+  readonly code: string | undefined;
+  /** The server's own message (`error`), or `HTTP <status>`. */
+  readonly serverMessage: string;
+
   constructor(
     readonly status: number,
     readonly body: unknown,
   ) {
-    const msg = typeof body === 'object' && body !== null && 'error' in body ? String(body.error) : `HTTP ${status}`;
-    super(msg);
+    const obj = typeof body === 'object' && body !== null ? (body as { error?: unknown; code?: unknown }) : undefined;
+    const serverMessage = obj && 'error' in obj ? String(obj.error) : `HTTP ${status}`;
+    const code = typeof obj?.code === 'string' ? obj.code : undefined;
+    super(errorText(code) ?? serverMessage);
     this.name = 'ApiError';
+    this.code = code;
+    this.serverMessage = serverMessage;
   }
 }
 

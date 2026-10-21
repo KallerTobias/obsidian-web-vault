@@ -1,11 +1,11 @@
 <script lang="ts" module>
   import { basename } from '@shared/normalize';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import type { Tab } from '../lib/stores/workspace';
 
   export function tabTitle(tab: Tab): string {
-    if (tab.kind === 'graph') return de.tabs.graph;
-    if (tab.kind === 'settings') return de.tabs.settings;
+    if (tab.kind === 'graph') return t.tabs.graph;
+    if (tab.kind === 'settings') return t.tabs.settings;
     const name = basename(tab.path ?? '');
     return tab.kind === 'note' ? name.replace(/\.md$/i, '') : name;
   }
@@ -62,8 +62,8 @@
     <button
       type="button"
       class="icon-button"
-      aria-label={de.tabs.back}
-      title={de.tabs.back}
+      aria-label={t.tabs.back}
+      title={t.tabs.back}
       disabled={!active || active.pos <= 0}
       onclick={() => workspace.back()}
     >
@@ -72,8 +72,8 @@
     <button
       type="button"
       class="icon-button"
-      aria-label={de.tabs.forward}
-      title={de.tabs.forward}
+      aria-label={t.tabs.forward}
+      title={t.tabs.forward}
       disabled={!active || active.pos >= active.history.length - 1}
       onclick={() => workspace.forward()}
     >
@@ -81,7 +81,7 @@
     </button>
   </div>
 
-  <div bind:this={strip} class="tabs" role="tablist" aria-label={de.tabs.label}>
+  <div bind:this={strip} class="tabs" role="tablist" aria-label={t.tabs.label}>
     {#each $workspace.tabs as tab, i (i)}
       {@const title = tabTitle(tab)}
       {@const selected = i === $workspace.active}
@@ -104,9 +104,9 @@
           }}
           onkeydown={(e) => onkeydown(e, i)}
         >
-          {title}{#if tab.deleted}<span class="visually-hidden"> {de.tabs.deletedSuffix}</span>{/if}
+          {title}{#if tab.deleted}<span class="visually-hidden"> {t.tabs.deletedSuffix}</span>{/if}
         </button>
-        <button type="button" class="close" tabindex="-1" aria-label={de.tabs.close(title)} title={de.tabs.close(title)} onclick={() => workspace.close(i)}>
+        <button type="button" class="close" tabindex="-1" aria-label={t.tabs.close(title)} title={t.tabs.close(title)} onclick={() => workspace.close(i)}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
       </div>

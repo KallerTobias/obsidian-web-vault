@@ -189,7 +189,7 @@ describe('basics', () => {
   it('answers unknown routes and malformed JSON with a German JSON error, no stack', async () => {
     const nf = await app.inject({ method: 'GET', url: '/nope' });
     expect(nf.statusCode).toBe(404);
-    expect(nf.json()).toEqual({ error: expect.any(String) });
+    expect(nf.json()).toEqual({ error: expect.any(String), code: 'NOT_FOUND' });
     const bad = await app.inject({
       method: 'POST',
       url: '/api/auth/login/verify',
@@ -197,7 +197,7 @@ describe('basics', () => {
       payload: '{not json',
     });
     expect(bad.statusCode).toBe(400);
-    expect(Object.keys(bad.json())).toEqual(['error']);
+    expect(bad.json()).toEqual({ error: 'Ungültige Anfrage', code: 'BAD_REQUEST' });
     expect(bad.body).not.toMatch(/at .*\.ts|stack/i);
   });
 });
@@ -231,7 +231,7 @@ describe('setup', () => {
   it('rejects setup without or with a wrong token (403)', async () => {
     await setup.issue();
     expect((await post('/api/auth/setup/options', {})).statusCode).toBe(403);
-    expect((await post('/api/auth/setup/options', { token: 'wrong' })).statusCode).toBe(403);
+    expect((await post('/api/auth/setup/options', { token: 'wrong' })).json().code).toBe('SETUP_DENIED');
     const res = await post('/api/auth/setup/verify', {
       token: 'wrong',
       challengeId: 'x',
@@ -239,6 +239,7 @@ describe('setup', () => {
       response: { id: 'a', challenge: 'b' },
     });
     expect(res.statusCode).toBe(403);
+    expect(res.json().code).toBe('SETUP_DENIED');
     expect(await passkeys.hasPasskeys()).toBe(false);
   });
 
@@ -350,6 +351,7 @@ describe('login', () => {
     const { options, challengeId } = (await loginOptions()).json();
     const res = await post('/api/auth/login/verify', { challengeId, response: { id: 'cred-1', challenge: options.challenge, uv: false } });
     expect(res.statusCode).toBe(401);
+    expect(res.json()).toEqual({ error: 'Anmeldung fehlgeschlagen', code: 'LOGIN_FAILED' });
     expect(res.headers['set-cookie']).toBeUndefined();
     const token = await setup.issue();
     const reg = (await post('/api/auth/setup/options', { token })).json();
@@ -369,6 +371,7 @@ describe('login', () => {
     expect((await post('/api/auth/login/verify', body)).statusCode).toBe(200);
     const again = await post('/api/auth/login/verify', body);
     expect(again.statusCode).toBe(400);
+    expect(again.json().code).toBe('CHALLENGE');
     expect(again.headers['set-cookie']).toBeUndefined();
   });
 
@@ -409,7 +412,7 @@ describe('login', () => {
   it('validates the request body (400)', async () => {
     const res = await post('/api/auth/login/verify', { challengeId: 5 });
     expect(res.statusCode).toBe(400);
-    expect(res.json()).toEqual({ error: expect.any(String) });
+    expect(res.json()).toEqual({ error: expect.any(String), code: 'BAD_REQUEST' });
   });
 });
 
@@ -418,7 +421,7 @@ describe('rate limit', () => {
     for (let i = 0; i < 10; i++) expect((await loginOptions()).statusCode).toBe(200);
     const res = await loginOptions();
     expect(res.statusCode).toBe(429);
-    expect(res.json()).toEqual({ error: expect.any(String) });
+    expect(res.json()).toEqual({ error: expect.any(String), code: 'RATE_LIMITED' });
     // Other IP is not affected.
     const other = await app.inject({
       method: 'POST',
@@ -513,12 +516,15 @@ describe('session-protected routes', () => {
 
     expect((await send('PATCH', '/api/auth/passkeys/cred-2', cookie, { name: 'iPhone' })).statusCode).toBe(204);
     expect((await passkeys.list()).find((p) => p.id === 'cred-2')?.name).toBe('iPhone');
-    expect((await send('PATCH', '/api/auth/passkeys/zzz', cookie, { name: 'x' })).statusCode).toBe(404);
+    expect((await send('PATCH', '/api/auth/passkeys/zzz', cookie, { name: 'x' })).json()).toEqual({
+      error: 'Passkey nicht gefunden',
+      code: 'PASSKEY_NOT_FOUND',
+    });
 
     expect((await send('DELETE', '/api/auth/passkeys/cred-2', cookie)).statusCode).toBe(204);
     const last = await send('DELETE', '/api/auth/passkeys/cred-1', cookie);
     expect(last.statusCode).toBe(409);
-    expect(last.json()).toEqual({ error: expect.any(String) });
+    expect(last.json()).toEqual({ error: expect.any(String), code: 'LAST_PASSKEY' });
     expect(await passkeys.hasPasskeys()).toBe(true);
     expect((await send('DELETE', '/api/auth/passkeys/cred-1?force=1', cookie)).statusCode).toBe(204);
     expect(await passkeys.hasPasskeys()).toBe(false);
@@ -535,6 +541,7 @@ describe('session-protected routes', () => {
       { cookie },
     );
     expect(dup.statusCode).toBe(409);
+    expect(dup.json().code).toBe('DUPLICATE');
     expect(await passkeys.list()).toHaveLength(1);
   });
 
@@ -549,7 +556,10 @@ describe('session-protected routes', () => {
 
     const target = list.find((s) => !s.current)!;
     expect((await send('DELETE', `/api/auth/sessions/${target.id}`, mine)).statusCode).toBe(204);
-    expect((await send('DELETE', `/api/auth/sessions/${target.id}`, mine)).statusCode).toBe(404);
+    expect((await send('DELETE', `/api/auth/sessions/${target.id}`, mine)).json()).toEqual({
+      error: 'Sitzung nicht gefunden',
+      code: 'SESSION_NOT_FOUND',
+    });
     expect(await sessions.list()).toHaveLength(2);
 
     expect((await post('/api/auth/sessions/revoke-others', undefined, { cookie: mine })).statusCode).toBe(204);
@@ -566,7 +576,7 @@ describe('adding a passkey needs a confirmation with an existing one (step-up)',
     const cookie = await doSetup('cred-1');
     const res = await addOptions(cookie);
     expect(res.statusCode).toBe(403);
-    expect(res.json()).toEqual({ error: 'Bitte zuerst mit einem vorhandenen Passkey bestätigen' });
+    expect(res.json()).toEqual({ error: 'Bitte zuerst mit einem vorhandenen Passkey bestätigen', code: 'STEP_UP' });
   });
 
   it('confirmation options require user verification; a failed or non-UV confirmation allows nothing', async () => {
@@ -574,7 +584,7 @@ describe('adding a passkey needs a confirmation with an existing one (step-up)',
     const { options } = (await post('/api/auth/passkeys/confirm/options', {}, { cookie })).json();
     expect(options.userVerification).toBe('required');
     expect((await confirm(cookie, 'cred-1', { uv: false })).statusCode).toBe(401);
-    expect((await confirm(cookie, 'cred-1', { ok: false })).statusCode).toBe(401);
+    expect((await confirm(cookie, 'cred-1', { ok: false })).json()).toEqual({ error: 'Bestätigung fehlgeschlagen', code: 'CONFIRM_FAILED' });
     expect((await confirm(cookie, 'unbekannt')).statusCode).toBe(401);
     expect((await addOptions(cookie)).statusCode).toBe(403);
   });

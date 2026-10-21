@@ -21,7 +21,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import type { GraphData } from '../api';
-  import { de } from '../i18n/de';
+  import { t } from '../i18n';
   import { graphSettings, watchGraph } from '../stores/graph';
   import { filterGraph } from './data';
   import GraphCanvas from './GraphCanvas.svelte';
@@ -39,8 +39,8 @@
   } = $props();
 
   const MODES = [
-    ['2d', de.graph.mode2d],
-    ['3d', de.graph.mode3d],
+    ['2d', t.graph.mode2d],
+    ['3d', t.graph.mode3d],
   ] as const;
 
   let raw = $state.raw<GraphData | null>(null);
@@ -60,7 +60,7 @@
     );
     return () => {
       stop();
-      graphSettings.flush();
+      void graphSettings.flush();
     };
   });
 
@@ -83,15 +83,15 @@
 <div class="graph-view">
   <div class="stage">
     {#if failed && !raw}
-      <p class="message" role="alert">{de.graph.loadFailed}</p>
+      <p class="message" role="alert">{t.graph.loadFailed}</p>
     {:else if !shown}
-      <p class="message">{de.graph.loading}</p>
+      <p class="message">{t.graph.loading}</p>
     {:else}
       <GraphCanvas data={shown} settings={$graphSettings} mode={$graphSettings.mode} {onOpen} {onTag} {onUnresolved} />
-      {#if shown.nodes.length === 0}<p class="message overlay">{de.graph.empty}</p>{/if}
+      {#if shown.nodes.length === 0}<p class="message overlay">{t.graph.empty}</p>{/if}
     {/if}
     <div class="controls">
-      <div class="modes" role="group" aria-label={de.graph.mode}>
+      <div class="modes" role="group" aria-label={t.graph.mode}>
         {#each MODES as [m, text] (m)}
           <button type="button" aria-pressed={$graphSettings.mode === m} onclick={() => graphSettings.update({ mode: m })}>{text}</button>
         {/each}
@@ -99,8 +99,8 @@
       <button
         type="button"
         class="icon-button"
-        aria-label={de.graph.toggleSettings}
-        title={de.graph.toggleSettings}
+        aria-label={t.graph.toggleSettings}
+        title={t.graph.toggleSettings}
         aria-expanded={sidebarOpen}
         aria-controls="graph-settings"
         onclick={toggleSidebar}
@@ -112,7 +112,7 @@
     </div>
   </div>
   {#if sidebarOpen}
-    <aside id="graph-settings" class="sidebar" aria-label={de.graph.settings}>
+    <aside id="graph-settings" class="sidebar" aria-label={t.graph.settings}>
       <GraphSettingsPanel settings={$graphSettings} onChange={(patch) => graphSettings.update(patch)} />
     </aside>
   {/if}

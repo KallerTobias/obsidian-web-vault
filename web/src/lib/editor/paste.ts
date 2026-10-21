@@ -2,7 +2,7 @@ import { createFileLookup, linkTextFor, type FileLookup } from '@shared/resolve'
 import type { Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { ApiError } from '../api';
-import { de } from '../i18n/de';
+import { t } from '../i18n';
 import { mediaKind } from '../media';
 
 /** The server's upload limit. */
@@ -43,12 +43,12 @@ let counter = 0;
 function insertFiles(view: EditorView, files: File[], pos: number, opts: PasteOptions, pasted: boolean): void {
   const accepted: File[] = [];
   for (const f of files) {
-    if (f.size > MAX_UPLOAD_BYTES) opts.onError(de.editor.uploadTooLarge(f.name || 'Datei'));
+    if (f.size > MAX_UPLOAD_BYTES) opts.onError(t.editor.uploadTooLarge(f.name || t.editor.unnamedFile));
     else accepted.push(f);
   }
   if (accepted.length === 0) return;
 
-  const marks = accepted.map(() => `![${de.editor.uploading} ${++counter}]()`);
+  const marks = accepted.map(() => `![${t.editor.uploading} ${++counter}]()`);
   view.dispatch({
     changes: { from: pos, insert: marks.join('\n') },
     selection: { anchor: pos + marks.join('\n').length },
@@ -81,7 +81,7 @@ function insertFiles(view: EditorView, files: File[], pos: number, opts: PasteOp
       },
       (err: unknown) => {
         replace(mark, '');
-        opts.onError(err instanceof ApiError && err.status === 413 ? de.editor.uploadTooLarge(file.name) : de.editor.uploadFailed(file.name || 'Datei'));
+        opts.onError(err instanceof ApiError && err.status === 413 ? t.editor.uploadTooLarge(file.name) : t.editor.uploadFailed(file.name || t.editor.unnamedFile));
       },
     );
   });

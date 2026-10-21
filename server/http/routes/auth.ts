@@ -13,22 +13,24 @@ import {
 /** Per IP on the unauthenticated ceremony routes (setup + login). */
 const authRateLimit = { rateLimit: { max: 10, timeWindow: 60_000 } };
 
-const STATUS: Record<PasskeyErrorCode, number> = {
-  CHALLENGE: 400,
-  VERIFY: 400,
-  FORBIDDEN: 403,
-  DUPLICATE: 409,
-  NOT_FOUND: 404,
-  LAST_PASSKEY: 409,
-  STEP_UP: 403,
+/** HTTP status and client error code of each PasskeyError. */
+const STATUS: Record<PasskeyErrorCode, [number, string]> = {
+  CHALLENGE: [400, 'CHALLENGE'],
+  VERIFY: [400, 'VERIFY'],
+  // Thrown for an invalid setup link: the same answer as the route's own check.
+  FORBIDDEN: [403, 'SETUP_DENIED'],
+  DUPLICATE: [409, 'DUPLICATE'],
+  NOT_FOUND: [404, 'PASSKEY_NOT_FOUND'],
+  LAST_PASSKEY: [409, 'LAST_PASSKEY'],
+  STEP_UP: [403, 'STEP_UP'],
 };
 
-/** Runs `fn`, turning PasskeyErrors into HttpErrors with the matching status. */
+/** Runs `fn`, turning PasskeyErrors into HttpErrors with the matching status and code. */
 async function mapped<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
   } catch (err) {
-    if (err instanceof PasskeyError) throw new HttpError(STATUS[err.code], err.message);
+    if (err instanceof PasskeyError) throw new HttpError(STATUS[err.code][0], err.message, STATUS[err.code][1]);
     throw err;
   }
 }
@@ -84,7 +86,7 @@ export async function authRoutes(app: FastifyInstance, deps: AppDeps): Promise<v
     '/api/auth/setup/options',
     { config: authRateLimit, schema: { body: { type: 'object', properties: { token: str(200) } } } },
     async (req) => {
-      if (!(await setup.check(req.body.token ?? ''))) throw new HttpError(403, SETUP_DENIED);
+      if (!(await setup.check(req.body.token ?? ''))) throw new HttpError(403, SETUP_DENIED, 'SETUP_DENIED');
       return passkeys.registrationOptions(ip(req));
     },
   );
@@ -97,7 +99,7 @@ export async function authRoutes(app: FastifyInstance, deps: AppDeps): Promise<v
     },
     async (req, reply) => {
       const token = req.body.token ?? '';
-      if (!(await setup.check(token))) throw new HttpError(403, SETUP_DENIED);
+      if (!(await setup.check(token))) throw new HttpError(403, SETUP_DENIED, 'SETUP_DENIED');
       const passkey = await mapped(() =>
         passkeys.finishRegistration(req.body.challengeId, req.body.response, req.body.name ?? '', () =>
           setup.consume(token),
@@ -126,7 +128,7 @@ export async function authRoutes(app: FastifyInstance, deps: AppDeps): Promise<v
     },
     async (req, reply) => {
       const ok = await mapped(() => passkeys.finishAuthentication(req.body.challengeId, req.body.response));
-      if (!ok) throw new HttpError(401, 'Anmeldung fehlgeschlagen');
+      if (!ok) throw new HttpError(401, 'Anmeldung fehlgeschlagen', 'LOGIN_FAILED');
       await startSession(req, reply);
       return { ok: true };
     },
@@ -165,7 +167,7 @@ export async function authRoutes(app: FastifyInstance, deps: AppDeps): Promise<v
     },
     async (req) => {
       const ok = await mapped(() => passkeys.finishConfirmation(req.session!.id, req.body.challengeId, req.body.response));
-      if (!ok) throw new HttpError(401, 'Bestätigung fehlgeschlagen');
+      if (!ok) throw new HttpError(401, 'Bestätigung fehlgeschlagen', 'CONFIRM_FAILED');
       return { ok: true };
     },
   );
@@ -211,7 +213,7 @@ export async function authRoutes(app: FastifyInstance, deps: AppDeps): Promise<v
 
   app.delete<{ Params: { id: string } }>('/api/auth/sessions/:id', authed, async (req, reply) => {
     const { id } = req.params;
-    if (!(await sessions.list()).some((s) => s.id === id)) throw new HttpError(404, 'Sitzung nicht gefunden');
+    if (!(await sessions.list()).some((s) => s.id === id)) throw new HttpError(404, 'Sitzung nicht gefunden', 'SESSION_NOT_FOUND');
     await sessions.revoke(id);
     if (id === req.session!.id) clearSessionCookie(reply, config);
     return reply.code(204).send();

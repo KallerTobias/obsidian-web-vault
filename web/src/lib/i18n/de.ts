@@ -51,6 +51,45 @@ export const de = {
     unexpected: 'Unerwarteter Fehler',
     confirmFailed: 'Die Bestätigung ist fehlgeschlagen. Nimm einen Passkey, der hier schon eingetragen ist.',
     wrongOrigin: 'Diese Adresse ist nicht die eingerichtete Adresse der App. Passkeys funktionieren nur dort.',
+
+    // Server errors by their `code` (UPPER_CASE keys; see server/http). Shown instead of the server's German `error`.
+    ORIGIN: 'Anfrage von fremder Herkunft abgelehnt',
+    UNAUTHENTICATED: 'Nicht angemeldet',
+    RATE_LIMITED: 'Zu viele Versuche, bitte eine Minute warten',
+    TOO_MANY_REQUESTS: 'Zu viele Anfragen',
+    TOO_MANY_STREAMS: 'Zu viele offene Verbindungen, bitte andere Tabs schließen',
+    TOO_LARGE: 'Anfrage zu groß',
+    FILE_TOO_LARGE: 'Datei zu groß zum Bearbeiten',
+    BAD_REQUEST: 'Ungültige Anfrage',
+    INTERNAL: 'Interner Fehler',
+    NOT_FOUND: 'Nicht gefunden',
+    INVALID_PATH: 'Ungültiger Pfad',
+    READONLY: 'Pfad ist schreibgeschützt',
+    NOT_UTF8:
+      'Die Datei ist nicht UTF-8-kodiert und kann hier nicht bearbeitet werden (sonst würden Zeichen zerstört). Als Anhang herunterladen geht weiterhin.',
+    NOT_A_FILE: 'Pfad ist keine Datei',
+    NOT_A_FOLDER: 'Ein Teil des Pfads ist kein Ordner',
+    IS_A_FOLDER: 'Pfad ist ein Ordner',
+    EXISTS: 'Existiert bereits',
+    TARGET_EXISTS: 'Ziel existiert bereits',
+    NAME_TOO_LONG: 'Name zu lang',
+    ACCESS_DENIED: 'Zugriff verweigert',
+    CONFLICT: 'Konflikt: Datei wurde zwischenzeitlich geändert',
+    NOT_TEXT: 'Keine Textdatei',
+    INVALID_NAME: 'Der Name darf keines dieser Zeichen enthalten: \\ : * ? " < > | # ^ [ ]',
+    MOVE_INTO_SELF: 'Ein Ordner kann nicht in sich selbst verschoben werden',
+    INVALID_RANGE: 'Ungültiger Bereich',
+    NO_FILE: 'Keine Datei übergeben',
+    SETUP_DENIED: 'Einrichtungslink ungültig oder abgelaufen',
+    LOGIN_FAILED: 'Anmeldung fehlgeschlagen',
+    CONFIRM_FAILED: 'Bestätigung fehlgeschlagen',
+    SESSION_NOT_FOUND: 'Sitzung nicht gefunden',
+    CHALLENGE: 'Anfrage abgelaufen oder ungültig, bitte erneut versuchen',
+    VERIFY: 'Passkey konnte nicht bestätigt werden',
+    DUPLICATE: 'Dieser Passkey ist bereits registriert',
+    PASSKEY_NOT_FOUND: 'Passkey nicht gefunden',
+    LAST_PASSKEY: 'Der letzte Passkey kann nur ausdrücklich gelöscht werden',
+    STEP_UP: 'Bitte zuerst mit einem vorhandenen Passkey bestätigen',
   },
 
   origin: {
@@ -71,6 +110,7 @@ export const de = {
     main: 'Notizen',
     files: 'Dateien',
     details: 'Details',
+    settings: 'Einstellungen',
     logout: 'Abmelden',
   },
 
@@ -181,7 +221,15 @@ export const de = {
     uploading: 'Hochladen…',
     uploadFailed: (name: string) => `Hochladen von „${name}“ fehlgeschlagen. Prüfe die Verbindung und versuche es erneut.`,
     uploadTooLarge: (name: string) => `„${name}“ ist größer als 50 MB und wird nicht hochgeladen.`,
+    /** Stands in for a pasted file without a name in the upload messages. */
+    unnamedFile: 'Datei',
     dismiss: 'Schließen',
+  },
+
+  /** Labels the Markdown renderer adds (footnote section). */
+  render: {
+    footnotes: 'Fußnoten',
+    footnoteBack: 'Zurück zum Text',
   },
 
   conflict: {
@@ -197,6 +245,7 @@ export const de = {
     keepDisk: 'Fassung von der Platte',
     keepBoth: 'Beide behalten',
     keepBothHint: (name: string) => `„Beide behalten“ legt deine Fassung als „${name}“ daneben ab.`,
+    noFreeCopyName: 'Kein freier Name für die Konfliktkopie',
     busy: 'Wird ausgeführt …',
     failed: 'Das hat nicht geklappt. Prüfe die Verbindung und versuche es erneut.',
   },
@@ -387,6 +436,13 @@ export const de = {
     saving: 'Wird gespeichert …',
     saveFailed: (msg: string) => `Nicht gespeichert: ${msg}`,
     loadFailed: 'Die Einstellungen konnten nicht geladen werden.',
+    language: {
+      heading: 'Sprache',
+      label: 'Sprache der Oberfläche',
+      /** `name`: the browser language's native name, e.g. "English". */
+      auto: (name: string) => `Automatisch (Browsersprache: ${name})`,
+      hint: 'Gilt nur für dieses Gerät und diesen Browser. Beim Wechseln wird die Seite neu geladen; Ungespeichertes wird vorher gesichert.',
+    },
     files: {
       heading: 'Dateien & Links',
       attachmentFolder: 'Ordner für Anhänge',
@@ -462,4 +518,4 @@ export const de = {
     /** Button label: current state and what a click does. */
     toggle: (current: string, next: string) => `Farbschema: ${current}. Wechseln zu ${next}`,
   },
-} as const;
+};

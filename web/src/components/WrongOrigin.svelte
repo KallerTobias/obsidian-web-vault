@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
 
   /** Shown instead of login/setup when the page is not open under the configured origin (PUBLIC_URL). */
   let { publicOrigin, target = '/' }: { publicOrigin?: string; target?: string } = $props();
@@ -8,12 +8,12 @@
 </script>
 
 <div class="wrong-origin" role="alert">
-  <h2>{de.origin.title}</h2>
+  <h2>{t.origin.title}</h2>
   {#if publicOrigin}
-    <p>{de.origin.text(publicOrigin)}</p>
-    {#if href}<a class="button-primary" {href}>{de.origin.link}</a>{/if}
+    <p>{t.origin.text(publicOrigin)}</p>
+    {#if href}<a class="button-primary" {href}>{t.origin.link}</a>{/if}
   {:else}
-    <p>{de.errors.wrongOrigin}</p>
+    <p>{t.errors.wrongOrigin}</p>
   {/if}
 </div>
 

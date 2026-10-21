@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import { cycleTheme, nextTheme, theme } from '../lib/stores/theme';
 
   const next = $derived(nextTheme($theme));
@@ -8,8 +8,8 @@
 <button
   type="button"
   class="icon-button"
-  aria-label={de.theme.toggle(de.theme[$theme], de.theme[next])}
-  title={de.theme.toggle(de.theme[$theme], de.theme[next])}
+  aria-label={t.theme.toggle(t.theme[$theme], t.theme[next])}
+  title={t.theme.toggle(t.theme[$theme], t.theme[next])}
   onclick={cycleTheme}
 >
   {#if $theme === 'light'}

@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { addAuthenticator, authenticatorOf, expect, test } from './fixtures';
+import { addAuthenticator, authenticatorOf, expect, openNote, test } from './fixtures';
 
 async function openSettings(page: Page): Promise<void> {
   await page.keyboard.press('ControlOrMeta+p');
@@ -53,7 +53,7 @@ test('zweiten Passkey hinzufügen und wieder entfernen', async ({ authed: page }
 test('ohne Bestätigung mit einem vorhandenen Passkey gibt es keine Registrierungsoptionen', async ({ authed: page, server }) => {
   const res = await page.request.post(`${server.url}/api/auth/passkeys/options`, { headers: { origin: server.url } });
   expect(res.status()).toBe(403);
-  expect(await res.json()).toEqual({ error: 'Bitte zuerst mit einem vorhandenen Passkey bestätigen' });
+  expect(await res.json()).toEqual({ error: 'Bitte zuerst mit einem vorhandenen Passkey bestätigen', code: 'STEP_UP' });
 });
 
 test('Sitzungsliste markiert die eigene Sitzung', async ({ authed: page }) => {
@@ -77,4 +77,84 @@ test('die eigene Sitzung über die API beenden', async ({ authed: page }) => {
     return { del: del.status, after: after.status };
   });
   expect(result).toEqual({ del: 204, after: 401 });
+});
+
+test('Sprache über das Zahnrad umstellen: Seite lädt neu, Wahl bleibt, Ungetipptes geht nicht verloren', async ({ authed: page, server }) => {
+  await expect(page.locator('html')).toHaveAttribute('lang', 'de'); // Playwright locale de-DE, preference auto
+  await server.write('Bearbeiten/Sprache.md', '# Sprache\n\n');
+  await openNote(page, 'Bearbeiten/Sprache.md');
+  await page.locator('.note-view .cm-content').click();
+  await page.keyboard.press('ControlOrMeta+End');
+  await page.keyboard.type('kurz vor dem Wechsel');
+
+  // Right away (within the save debounce): the gear in the toolbar opens the settings.
+  await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+  const region = page.getByRole('region', { name: 'Einstellungen' });
+  const select = region.getByLabel('Sprache der Oberfläche');
+  await expect(select).toHaveValue('auto');
+  await expect(select.locator('option[value="auto"]')).toHaveText('Automatisch (Browsersprache: Deutsch)');
+  await Promise.all([page.waitForEvent('load'), select.selectOption('en')]);
+
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  expect(await server.read('Bearbeiten/Sprache.md')).toBe('# Sprache\n\nkurz vor dem Wechsel');
+  expect(await page.evaluate(() => localStorage.getItem('vw-language'))).toBe('en');
+
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  const again = page.getByRole('region', { name: 'Settings' }).getByLabel('Interface language');
+  await expect(again).toHaveValue('en');
+
+  await Promise.all([page.waitForEvent('load'), again.selectOption('auto')]);
+  await expect(page.locator('html')).toHaveAttribute('lang', 'de');
+  expect(await page.evaluate(() => localStorage.getItem('vw-language'))).toBe('auto');
+
+  // Phone width: the gear stays in the title bar.
+  await page.setViewportSize({ width: 375, height: 700 });
+  await expect(page.getByRole('button', { name: 'Einstellungen', exact: true })).toBeInViewport();
+});
+
+test('Sprachwechsel mit einer Notiz, die nicht gespeichert werden kann: keine Rückfrage, Entwurf kommt nach dem Neuladen zurück', async ({ authed: page, server }) => {
+  // The language reload never asks "leave with unsaved changes?" (a cancelled reload would leave the
+  // new language stored but not shown); unsaved text comes back as a draft. Opening the settings tab
+  // already closes the note view, so the prompt itself is covered by the unit test of warnBeforeUnload.
+  await server.write('Bearbeiten/Ohne Netz.md', '# Ohne Netz\n\n');
+  await openNote(page, 'Bearbeiten/Ohne Netz.md');
+  await page.route('**/api/note?*', (route) => (route.request().method() === 'PUT' ? route.abort('internetdisconnected') : route.fallback()));
+  await page.locator('.note-view .cm-content').click();
+  await page.keyboard.press('ControlOrMeta+End');
+  await page.keyboard.type('offline getippt');
+  const dialogs: string[] = [];
+  page.on('dialog', (d) => {
+    dialogs.push(d.type());
+    void d.dismiss(); // "Stay" for a beforeunload prompt
+  });
+
+  await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+  const select = page.getByRole('region', { name: 'Einstellungen' }).getByLabel('Sprache der Oberfläche');
+  await Promise.all([page.waitForEvent('load'), select.selectOption('en')]);
+
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  expect(dialogs).toEqual([]);
+  expect(await page.evaluate(() => localStorage.getItem('vw-language'))).toBe('en');
+  await page.getByRole('tab', { name: 'Ohne Netz' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Unsaved changes from your last visit were restored.' })).toBeVisible();
+  await expect(page.locator('.note-view .cm-content')).toContainText('offline getippt');
+  expect(await server.read('Bearbeiten/Ohne Netz.md')).toBe('# Ohne Netz\n\n');
+});
+
+test('Anmelde- bzw. Einrichtungsseite bietet die Sprachwahl an', async ({ page, server }) => {
+  // No session and no authenticator: the login screen (or the setup screen when this test runs alone) stays.
+  await page.goto(server.url);
+  await expect(page.getByRole('heading', { name: /^(Anmelden|Passkey einrichten)$/ })).toBeVisible();
+  const select = page.getByRole('combobox', { name: 'Sprache der Oberfläche' });
+  await expect(select).toHaveValue('auto');
+  await Promise.all([page.waitForEvent('load'), select.selectOption('fr')]);
+  await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
+  await expect(page.getByRole('heading', { name: /^(Connexion|Configurer une clé d’accès)$/ })).toBeVisible();
+  const french = page.getByRole('combobox', { name: 'Langue de l’interface' });
+  await expect(french).toHaveValue('fr');
+  await Promise.all([page.waitForEvent('load'), french.selectOption('auto')]);
+  await expect(page.locator('html')).toHaveAttribute('lang', 'de');
+  await expect(page.getByRole('combobox', { name: 'Sprache der Oberfläche' })).toHaveValue('auto');
 });

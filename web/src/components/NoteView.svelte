@@ -9,7 +9,7 @@
   import { EditorView } from '@codemirror/view';
   import { activeNote, type ActiveNote } from '../lib/stores/active-note';
   import { taskToggle } from '../lib/editor/tasks';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import { events } from '../lib/stores/events';
   import { editorSettings } from '../lib/stores/settings';
   import { vault } from '../lib/stores/vault';
@@ -286,23 +286,23 @@
     editor?.destroy();
   });
 
-  const statusText = $derived(de.editor.status[saveState]);
+  const statusText = $derived(t.editor.status[saveState]);
 </script>
 
 <svelte:window onkeydown={onKeydown} />
 
 <div class="note-view">
   {#if loadState === 'loading'}
-    <p class="placeholder" role="status">{de.reading.loading}</p>
+    <p class="placeholder" role="status">{t.reading.loading}</p>
   {:else if loadState === 'notUtf8'}
     <div class="placeholder" role="alert">
-      <p>{de.reading.notUtf8}</p>
-      <a class="link-button" href={api.file.url(path)} download>{de.reading.download}</a>
+      <p>{t.reading.notUtf8}</p>
+      <a class="link-button" href={api.file.url(path)} download>{t.reading.download}</a>
     </div>
   {:else if loadState === 'error'}
     <div class="placeholder" role="alert">
-      <p>{de.reading.loadFailed}</p>
-      <button type="button" class="link-button" onclick={load}>{de.retry}</button>
+      <p>{t.reading.loadFailed}</p>
+      <button type="button" class="link-button" onclick={load}>{t.retry}</button>
     </div>
   {:else}
     <div class="note-header">
@@ -312,30 +312,30 @@
           >{statusText}{#if saveState === 'error' && errorMessage}: {errorMessage}{/if}</span
         >
         {#if saveState === 'offline' || saveState === 'error'}
-          <button type="button" class="link-button" onclick={saveNow}>{de.editor.retry}</button>
+          <button type="button" class="link-button" onclick={saveNow}>{t.editor.retry}</button>
         {/if}
       {/if}
     </div>
 
     {#if readonly}
-      <p class="banner" role="note">{de.editor.readonly}</p>
+      <p class="banner" role="note">{t.editor.readonly}</p>
     {/if}
     {#if uploadError}
       <div class="banner warn" role="alert">
         <span>{uploadError}</span>
-        <button type="button" class="link-button" onclick={() => (uploadError = '')}>{de.editor.dismiss}</button>
+        <button type="button" class="link-button" onclick={() => (uploadError = '')}>{t.editor.dismiss}</button>
       </div>
     {/if}
     {#if draftRestored}
-      <p class="banner" role="status">{de.editor.draftRestored}</p>
+      <p class="banner" role="status">{t.editor.draftRestored}</p>
     {/if}
     {#if goneOnDisk || deleted}
       <div class="banner warn" role="alert">
-        <span>{unsaved ? de.editor.deletedUnsaved : de.tabs.deleted}</span>
+        <span>{unsaved ? t.editor.deletedUnsaved : t.tabs.deleted}</span>
         {#if unsaved && !readonly}
-          <button type="button" class="link-button" onclick={saveAsNew}>{de.editor.saveAsNew}</button>
+          <button type="button" class="link-button" onclick={saveAsNew}>{t.editor.saveAsNew}</button>
         {/if}
-        {#if onCloseTab}<button type="button" class="link-button" onclick={onCloseTab}>{de.tabs.closeTab}</button>{/if}
+        {#if onCloseTab}<button type="button" class="link-button" onclick={onCloseTab}>{t.tabs.closeTab}</button>{/if}
       </div>
     {/if}
 

@@ -1,6 +1,7 @@
 import { dirname } from '@shared/normalize';
 import type { LookupEntry } from './api';
 import { fuzzyScore } from './fuzzy';
+import { lang } from './i18n';
 import { isNotePath } from './tree';
 
 export interface QuickMatch {
@@ -28,7 +29,7 @@ export function quickMatches(entries: readonly LookupEntry[], query: string, rec
     const byPath = new Map(notes.map((e) => [e.path, e]));
     const first = recent.flatMap((p) => byPath.get(p) ?? []);
     const seen = new Set(first.map((e) => e.path));
-    const rest = notes.filter((e) => !seen.has(e.path)).sort((a, b) => a.name.localeCompare(b.name, 'de', { sensitivity: 'base' }));
+    const rest = notes.filter((e) => !seen.has(e.path)).sort((a, b) => a.name.localeCompare(b.name, lang, { sensitivity: 'base' }));
     return [...first, ...rest].slice(0, limit).map(plain);
   }
 

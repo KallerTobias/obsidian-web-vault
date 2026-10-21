@@ -7,7 +7,7 @@
   } from '@simplewebauthn/browser';
   import { onMount } from 'svelte';
   import { api } from '../lib/api';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import { isCancellation, isOriginError, isWrongOrigin, passkeyErrorMessage } from '../lib/passkey';
   import WrongOrigin from './WrongOrigin.svelte';
 
@@ -84,26 +84,26 @@
 </script>
 
 <div class="auth-card" role="region" aria-labelledby="login-title">
-  <h1 id="login-title">{expired ? de.login.expiredTitle : de.login.title}</h1>
-  <p>{expired ? de.login.expiredIntro : de.login.intro}</p>
+  <h1 id="login-title">{expired ? t.login.expiredTitle : t.login.title}</h1>
+  <p>{expired ? t.login.expiredIntro : t.login.intro}</p>
 
   {#if wrongOrigin}
     <WrongOrigin {publicOrigin} />
   {:else if !supported}
-    <p class="error-message" role="alert">{de.errors.unsupported}</p>
+    <p class="error-message" role="alert">{t.errors.unsupported}</p>
   {:else}
     <button type="button" class="button-primary" onclick={login} disabled={busy} aria-busy={busy}>
-      {busy ? de.login.busy : de.login.button}
+      {busy ? t.login.busy : t.login.button}
     </button>
 
     <label class="field">
-      <span class="field-label">{de.login.autofillLabel}</span>
+      <span class="field-label">{t.login.autofillLabel}</span>
       <input
         class="text-input"
         type="text"
         name="username"
         autocomplete="username webauthn"
-        placeholder={de.login.autofillPlaceholder}
+        placeholder={t.login.autofillPlaceholder}
         readonly={busy}
       />
     </label>

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { basename } from '@shared/normalize';
   import { api } from '../lib/api';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import { mediaKind } from '../lib/media';
 
   /** Shows a non-note file from the vault: image, PDF, audio, video; anything else as download. */
@@ -24,11 +24,11 @@
     <!-- svelte-ignore a11y_media_has_caption -->
     <video {src} controls preload="metadata" aria-label={name}></video>
   {:else}
-    <p class="hint">{de.media.unsupported}</p>
+    <p class="hint">{t.media.unsupported}</p>
   {/if}
   <p class="actions">
-    {#if kind === 'pdf'}<a href={src} target="_blank" rel="noopener">{de.media.openPdf}</a> · {/if}
-    <a href={src} download={name}>{de.media.download}</a>
+    {#if kind === 'pdf'}<a href={src} target="_blank" rel="noopener">{t.media.openPdf}</a> · {/if}
+    <a href={src} download={name}>{t.media.download}</a>
   </p>
 </div>
 

@@ -2,7 +2,7 @@ import { basename, joinPath } from '@shared/normalize';
 import { applyTemplate, dailyNotePath } from '@shared/template';
 import { get } from 'svelte/store';
 import { ApiError, api, type Settings } from './api';
-import { de } from './i18n/de';
+import { t } from './i18n';
 import { isValidNoteName } from './names';
 import { vault } from './stores/vault';
 import { workspace } from './stores/workspace';
@@ -10,7 +10,7 @@ import { workspace } from './stores/workspace';
 /** The title is not usable as a file name (message is German, ready to show). */
 export class InvalidNoteNameError extends Error {
   constructor() {
-    super(de.rename.invalidName);
+    super(t.rename.invalidName);
     this.name = 'InvalidNoteNameError';
   }
 }
@@ -51,10 +51,10 @@ const is409 = (err: unknown) => err instanceof ApiError && err.status === 409;
  * name is taken. An empty title becomes "Unbenannt". Throws `InvalidNoteNameError` for forbidden characters.
  */
 export function newNotePath(folder: string, title: string, exists: (path: string) => boolean): string {
-  const t = title.trim() || de.files.untitled;
-  if (!isValidNoteName(t)) throw new InvalidNoteNameError();
+  const name = title.trim() || t.files.untitled;
+  if (!isValidNoteName(name)) throw new InvalidNoteNameError();
   for (let i = 0; ; i++) {
-    const path = joinPath(folder, `${i === 0 ? t : `${t} ${i}`}.md`);
+    const path = joinPath(folder, `${i === 0 ? name : `${name} ${i}`}.md`);
     if (!exists(path)) return path;
   }
 }

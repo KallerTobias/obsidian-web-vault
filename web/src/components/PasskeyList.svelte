@@ -3,11 +3,11 @@
   import { onMount } from 'svelte';
   import { ApiError, api, type PasskeyInfo } from '../lib/api';
   import { formatDateTime } from '../lib/format';
-  import { de } from '../lib/i18n/de';
+  import { t as messages } from '../lib/i18n';
   import { defaultDeviceName, isCancellation, passkeyErrorMessage } from '../lib/passkey';
 
   /** Settings section: the account's passkeys (rename, remove) and adding one for this device. */
-  const t = de.settings.passkeys;
+  const t = messages.settings.passkeys;
 
   let list = $state<PasskeyInfo[] | null>(null);
   let loadFailed = $state(false);
@@ -150,7 +150,7 @@
       {phase === 'confirming' ? t.confirming : phase === 'registering' ? t.adding : t.addHint}
     </p>
   {:else}
-    <p class="error-message" role="alert">{de.errors.unsupported}</p>
+    <p class="error-message" role="alert">{messages.errors.unsupported}</p>
   {/if}
 
   {#if error}<p class="error-message" role="alert">{error}</p>{/if}

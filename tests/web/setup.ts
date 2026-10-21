@@ -16,3 +16,10 @@ if (typeof Range !== 'undefined' && !Range.prototype.getClientRects) {
   Range.prototype.getClientRects = empty;
   Range.prototype.getBoundingClientRect = () => new DOMRect(0, 0, 0, 0);
 }
+
+// The UI language is chosen once at startup (`web/src/lib/i18n`); the tests assert German texts.
+try {
+  localStorage.setItem('vw-language', 'de');
+} catch {
+  /* no storage: the tests below that need German then fail visibly */
+}

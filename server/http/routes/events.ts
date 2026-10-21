@@ -55,7 +55,7 @@ export async function eventRoutes(app: FastifyInstance, deps: EventRouteDeps): P
     const sessionId = req.session!.id;
     const streams = perSession.get(sessionId) ?? 0;
     if (streams >= MAX_STREAMS_PER_SESSION) {
-      return reply.code(429).send({ error: 'Zu viele offene Verbindungen, bitte andere Tabs schließen' });
+      return reply.code(429).send({ error: 'Zu viele offene Verbindungen, bitte andere Tabs schließen', code: 'TOO_MANY_STREAMS' });
     }
     perSession.set(sessionId, streams + 1);
     const token = sessionToken(req, config) ?? '';

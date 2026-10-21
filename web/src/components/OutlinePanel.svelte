@@ -1,7 +1,7 @@
 <script lang="ts">
   import { parseNote } from '@shared/parse';
   import type { Heading } from '@shared/types';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import type { ActiveNote } from '../lib/stores/active-note';
 
   /** The note's headings (parsed from the editor text, debounced while typing); a click scrolls there. */
@@ -27,9 +27,9 @@
 </script>
 
 {#if headings.length === 0}
-  <p class="empty">{de.outline.none}</p>
+  <p class="empty">{t.outline.none}</p>
 {:else}
-  <ul class="outline" aria-label={de.outline.label}>
+  <ul class="outline" aria-label={t.outline.label}>
     {#each headings as h (h.line)}
       <li>
         <button type="button" class="heading" style:--depth={h.level - minLevel} onclick={() => note.revealHeading({ line: h.line, text: h.text })}>

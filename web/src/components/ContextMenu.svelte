@@ -12,7 +12,7 @@
 
 <script lang="ts">
   import { tick } from 'svelte';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
 
   /**
    * A small popup menu at (x, y) in viewport pixels. Keyboard: arrows, Home/End, Enter/Space,
@@ -125,7 +125,7 @@
   oncontextmenu={(e) => e.preventDefault()}
 >
   {#if stack.length}
-    <button type="button" role="menuitem" class="item back" onclick={back}>‹ {de.files.templatesBack}</button>
+    <button type="button" role="menuitem" class="item back" onclick={back}>‹ {t.files.templatesBack}</button>
     <div class="separator" role="separator"></div>
   {/if}
   {#each shown as item, i (i)}

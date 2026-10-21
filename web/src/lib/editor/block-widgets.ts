@@ -14,7 +14,7 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 import type { SyntaxNode } from '@lezer/common';
 import { basename } from '@shared/normalize';
 import { resolveLink, type FileLookup } from '@shared/resolve';
-import { de } from '../i18n/de';
+import { t } from '../i18n';
 import { embedKey, hydrateEmbeds, MAX_EMBEDS } from '../markdown/embeds';
 import { renderMermaid } from '../markdown/mermaid';
 import { fileUrl } from '../markdown/remark-obsidian';
@@ -423,7 +423,7 @@ class ImageWidget extends WidgetType {
     if (this.target === null) {
       const missing = document.createElement('span');
       missing.className = `${WIDGET_CLASS} cm-image-missing`;
-      missing.textContent = de.media.notFound(this.name);
+      missing.textContent = t.media.notFound(this.name);
       return missing;
     }
     const img = document.createElement('img');

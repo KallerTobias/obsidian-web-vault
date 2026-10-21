@@ -1,7 +1,7 @@
 <script lang="ts">
   import { browserSupportsWebAuthn, startRegistration } from '@simplewebauthn/browser';
   import { api } from '../lib/api';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import { defaultDeviceName, isOriginError, isWrongOrigin, passkeyErrorMessage } from '../lib/passkey';
   import WrongOrigin from './WrongOrigin.svelte';
 
@@ -48,26 +48,26 @@
 </script>
 
 <div class="auth-card" role="region" aria-labelledby="setup-title">
-  <h1 id="setup-title">{de.setup.title}</h1>
+  <h1 id="setup-title">{t.setup.title}</h1>
 
   {#if wrongOrigin}
     <!-- The setup link keeps its token, so it still works at the right address. -->
     <WrongOrigin {publicOrigin} target={token ? `/setup#${token}` : '/'} />
   {:else if !supported}
-    <p class="error-message" role="alert">{de.errors.unsupported}</p>
+    <p class="error-message" role="alert">{t.errors.unsupported}</p>
   {:else if !token}
-    <p>{de.setup.noToken}</p>
-    <p class="field-hint">{de.setup.noTokenHint}</p>
+    <p>{t.setup.noToken}</p>
+    <p class="field-hint">{t.setup.noTokenHint}</p>
   {:else}
-    <p>{de.setup.intro}</p>
+    <p>{t.setup.intro}</p>
     <form class="setup-form" onsubmit={register}>
       <label class="field">
-        <span class="field-label">{de.setup.deviceName}</span>
+        <span class="field-label">{t.setup.deviceName}</span>
         <input class="text-input" type="text" bind:value={name} maxlength="200" autocomplete="off" required />
-        <span class="field-hint">{de.setup.deviceHint}</span>
+        <span class="field-hint">{t.setup.deviceHint}</span>
       </label>
       <button type="submit" class="button-primary" disabled={busy} aria-busy={busy}>
-        {busy ? de.setup.busy : de.setup.button}
+        {busy ? t.setup.busy : t.setup.button}
       </button>
     </form>
   {/if}
@@ -77,7 +77,7 @@
   {/if}
 
   {#if onLogin && !wrongOrigin}
-    <button type="button" class="link-button" onclick={onLogin}>{de.setup.toLogin}</button>
+    <button type="button" class="link-button" onclick={onLogin}>{t.setup.toLogin}</button>
   {/if}
 </div>
 

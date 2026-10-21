@@ -9,13 +9,16 @@ declare module 'fastify' {
   }
 }
 
-/** Error with an HTTP status whose message (German) is shown to the client. */
+/**
+ * Error with an HTTP status. The client gets `{ error: message, code }`: `code` is the stable,
+ * machine-readable reason (e.g. `ORIGIN`) the web app translates; `error` stays German for
+ * older clients and logs.
+ */
 export class HttpError extends Error {
   constructor(
     readonly statusCode: number,
     message: string,
-    /** Machine-readable reason for the client (e.g. `ORIGIN`), sent next to `error`. */
-    readonly code?: string,
+    readonly code: string,
   ) {
     super(message);
     this.name = 'HttpError';
@@ -107,7 +110,7 @@ export function requireSession(
     const session = token ? await sessions.validate(token) : null;
     if (!token || !session) {
       if (token) clearSessionCookie(reply, config);
-      throw new HttpError(401, 'Nicht angemeldet');
+      throw new HttpError(401, 'Nicht angemeldet', 'UNAUTHENTICATED');
     }
     req.session = session;
     setSessionCookie(reply, token, config);

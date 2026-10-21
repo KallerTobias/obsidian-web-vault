@@ -21,7 +21,7 @@ export async function indexRoutes(app: FastifyInstance, deps: AppDeps): Promise<
 
   app.get<{ Querystring: { path: string } }>('/api/meta', { schema: { querystring: pathQuery } }, async (req) => {
     const note = index.note(normalizeRel(req.query.path));
-    if (!note) throw new HttpError(404, 'Nicht gefunden');
+    if (!note) throw new HttpError(404, 'Nicht gefunden', 'NOT_FOUND');
     return note;
   });
 

@@ -2,7 +2,7 @@
   import { joinPath } from '@shared/normalize';
   import { fold } from '@shared/query';
   import { ApiError, api } from '../lib/api';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import { isValidNoteName } from '../lib/names';
   import { quickMatches } from '../lib/quick';
   import { vault } from '../lib/stores/vault';
@@ -36,9 +36,9 @@
     ...matches.map((m) => ({
       id: m.alias === undefined ? m.path : `${m.path}\u0000${m.alias}`,
       label: m.alias ?? m.name,
-      detail: [m.alias === undefined ? '' : de.quick.aliasOf(m.name), m.folder].filter(Boolean).join(' · ') || undefined,
+      detail: [m.alias === undefined ? '' : t.quick.aliasOf(m.name), m.folder].filter(Boolean).join(' · ') || undefined,
     })),
-    ...(name !== '' && !exists ? [{ id: CREATE, label: de.quick.create(name) }] : []),
+    ...(name !== '' && !exists ? [{ id: CREATE, label: t.quick.create(name) }] : []),
   ]);
 
   // The error belongs to the name it was shown for.
@@ -50,7 +50,7 @@
   async function create(newTab: boolean): Promise<void> {
     if (busy) return;
     if (!isValidNoteName(name)) {
-      error = de.quick.invalidName;
+      error = t.quick.invalidName;
       return;
     }
     busy = true;
@@ -68,7 +68,7 @@
       onClose();
       onOpen(path, { newTab });
     } catch (err) {
-      error = de.quick.createFailed(err instanceof Error ? err.message : String(err));
+      error = t.quick.createFailed(err instanceof Error ? err.message : String(err));
     } finally {
       busy = false;
     }
@@ -85,11 +85,11 @@
 </script>
 
 <Palette
-  title={de.quick.title}
-  placeholder={de.quick.placeholder}
+  title={t.quick.title}
+  placeholder={t.quick.placeholder}
   bind:query
   {items}
-  emptyText={de.quick.none}
+  emptyText={t.quick.none}
   footer={error}
   onSelect={select}
   {onClose}

@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { fuzzyScore } from '../lib/fuzzy';
   import { api } from '../lib/api';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import { createFromTemplate, InvalidNoteNameError } from '../lib/new-note';
   import { displayName, notesBelow } from '../lib/tree';
   import { vault } from '../lib/stores/vault';
@@ -58,11 +58,11 @@
   );
   const hint = $derived(
     loadFailed
-      ? de.template.loadFailed
+      ? t.template.loadFailed
       : templatesFolder === ''
-        ? de.template.noFolder
+        ? t.template.noFolder
         : templatesFolder !== null && templates.length === 0 && $tree
-          ? de.template.noTemplates(templatesFolder)
+          ? t.template.noTemplates(templatesFolder)
           : '',
   );
 
@@ -106,7 +106,7 @@
       onCreated(path);
       onClose();
     } catch (err) {
-      error = err instanceof InvalidNoteNameError ? err.message : de.template.createFailed(err instanceof Error ? err.message : String(err));
+      error = err instanceof InvalidNoteNameError ? err.message : t.template.createFailed(err instanceof Error ? err.message : String(err));
     } finally {
       busy = false;
     }
@@ -129,24 +129,24 @@
     }}
   >
     <form onsubmit={submit}>
-      <h2 id="template-title">{de.template.titleHeading(chosen.label)}</h2>
+      <h2 id="template-title">{t.template.titleHeading(chosen.label)}</h2>
       <label class="field">
-        <span class="field-label">{de.template.titleLabel}</span>
+        <span class="field-label">{t.template.titleLabel}</span>
         <input
           bind:this={titleInput}
           bind:value={title}
           class="text-input"
           autocomplete="off"
           spellcheck="false"
-          placeholder={de.files.untitled}
+          placeholder={t.files.untitled}
           aria-describedby="template-title-hint"
         />
       </label>
-      <p id="template-title-hint" class="field-hint">{de.template.titleHint(folder)}</p>
+      <p id="template-title-hint" class="field-hint">{t.template.titleHint(folder)}</p>
       {#if error}<p class="error-message" role="alert">{error}</p>{/if}
       <div class="buttons">
-        <button type="button" class="link-button" onclick={onClose} disabled={busy}>{de.template.cancel}</button>
-        <button type="submit" class="button-primary" disabled={busy}>{busy ? de.template.busy : de.template.create}</button>
+        <button type="button" class="link-button" onclick={onClose} disabled={busy}>{t.template.cancel}</button>
+        <button type="submit" class="button-primary" disabled={busy}>{busy ? t.template.busy : t.template.create}</button>
       </div>
     </form>
   </dialog>
@@ -160,20 +160,20 @@
       onClose();
     }}
   >
-    <h2 id="template-hint-title">{de.template.title}</h2>
+    <h2 id="template-hint-title">{t.template.title}</h2>
     <p role={loadFailed ? 'alert' : 'status'}>{hint}</p>
     <div class="buttons">
-      <button type="button" class="link-button" onclick={onClose}>{de.template.close}</button>
-      {#if !loadFailed}<button type="button" class="button-primary" onclick={toSettings}>{de.template.toSettings}</button>{/if}
+      <button type="button" class="link-button" onclick={onClose}>{t.template.close}</button>
+      {#if !loadFailed}<button type="button" class="button-primary" onclick={toSettings}>{t.template.toSettings}</button>{/if}
     </div>
   </dialog>
 {:else if templatesFolder !== null}
   <Palette
-    title={de.template.title}
-    placeholder={de.template.placeholder}
+    title={t.template.title}
+    placeholder={t.template.placeholder}
     bind:query
     {items}
-    emptyText={de.template.none}
+    emptyText={t.template.none}
     onSelect={choose}
     {onClose}
   />

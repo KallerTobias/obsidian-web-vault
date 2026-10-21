@@ -41,6 +41,22 @@ describe('graph settings store', () => {
     await vi.advanceTimersByTimeAsync(1000);
     expect(save).toHaveBeenCalledTimes(1);
   });
+
+  it('flush resolves once the save has settled (before a reload), also when it fails; nothing waiting resolves at once', async () => {
+    let fail!: (e: Error) => void;
+    const save = vi.fn(() => new Promise<void>((_resolve, reject) => (fail = reject)));
+    const s = createGraphSettings({ get: async () => settingsWith({}), save });
+    await s.flush();
+    expect(save).not.toHaveBeenCalled();
+    s.update({ repel: 2 });
+    let done = false;
+    const p = s.flush().then(() => (done = true));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(done).toBe(false);
+    fail(new Error('offline'));
+    await p;
+    expect(done).toBe(true);
+  });
 });
 
 describe('watchGraph', () => {

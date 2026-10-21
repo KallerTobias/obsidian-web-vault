@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import { displayName, type TreeRow } from '../lib/tree';
 
   /**
@@ -48,7 +48,7 @@
   draggable="true"
   style:transform="translateY({top}px)"
   style:padding-left="calc({row.level - 1} * var(--tree-indent) + var(--size-2))"
-  title={entry.readonly ? `${entry.path} (${de.files.readonly})` : entry.path}
+  title={entry.readonly ? `${entry.path} (${t.files.readonly})` : entry.path}
 >
   <span class="chevron" aria-hidden="true">
     {#if isFolder}
@@ -60,7 +60,7 @@
     <span class="ext" aria-hidden="true">{entry.name.includes('.') ? entry.name.split('.').pop() : ''}</span>
   {/if}
   {#if entry.readonly}
-    <svg class="lock" viewBox="0 0 24 24" aria-label={de.files.readonly} role="img">
+    <svg class="lock" viewBox="0 0 24 24" aria-label={t.files.readonly} role="img">
       <rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
     </svg>
   {/if}

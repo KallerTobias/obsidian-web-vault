@@ -1,7 +1,7 @@
 <script lang="ts">
   import { tick } from 'svelte';
   import { commands, filterCommands, formatHotkey } from '../lib/commands';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import Palette, { type PaletteItem } from './Palette.svelte';
 
   /** Command palette (Mod-p): every command, filtered by fuzzy search; Enter runs it. */
@@ -23,11 +23,11 @@
 </script>
 
 <Palette
-  title={de.palette.title}
-  placeholder={de.palette.placeholder}
+  title={t.palette.title}
+  placeholder={t.palette.placeholder}
   bind:query
   {items}
-  emptyText={de.palette.none}
+  emptyText={t.palette.none}
   onSelect={(item) => void select(item)}
   {onClose}
 />

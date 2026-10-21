@@ -2,17 +2,18 @@
   import { dailyNotePath } from '@shared/template';
   import { onDestroy, onMount } from 'svelte';
   import { api, type Settings, type SettingsPatch } from '../lib/api';
-  import { de } from '../lib/i18n/de';
+  import { beforeLanguageReload, t as messages } from '../lib/i18n';
   import { editorSettings } from '../lib/stores/settings';
   import { theme, type ThemePreference } from '../lib/stores/theme';
   import { vault } from '../lib/stores/vault';
   import { folderPaths } from '../lib/tree';
+  import LanguageSelect from './LanguageSelect.svelte';
   import PasskeyList from './PasskeyList.svelte';
   import SessionList from './SessionList.svelte';
 
   /** Changes are saved this long after the last one. */
   const SAVE_DELAY_MS = 500;
-  const t = de.settings;
+  const t = messages.settings;
   const uid = `settings-${Math.random().toString(36).slice(2, 8)}`;
   const { tree } = vault;
 
@@ -86,8 +87,12 @@
     );
   });
 
+  // A language change reloads the page: a change still waiting is sent first.
+  const offReload = beforeLanguageReload(flush);
+
   // Leaving the tab must not lose a change that is still waiting.
   onDestroy(() => {
+    offReload();
     clearTimeout(savedTimer);
     void flush();
   });
@@ -112,6 +117,16 @@
     </p>
   </header>
   {#if status === 'error'}<p class="error-message" role="alert">{saveError}</p>{/if}
+
+  <!-- Per device (localStorage), so it works even when the server settings cannot be loaded. -->
+  <section aria-labelledby="{uid}-language">
+    <h3 id="{uid}-language">{t.language.heading}</h3>
+    <div class="field">
+      <label class="field-label" for="{uid}-lang">{t.language.label}</label>
+      <LanguageSelect id="{uid}-lang" describedby="{uid}-lang-hint" />
+      <span class="field-hint" id="{uid}-lang-hint">{t.language.hint}</span>
+    </div>
+  </section>
 
   {#if loadFailed}
     <p class="error-message" role="alert">{t.loadFailed}</p>
@@ -243,7 +258,7 @@
       <div class="field">
         <label class="field-label" for="{uid}-f8">{t.appearance.theme}</label>
         <select id="{uid}-f8" class="text-input" value={$theme} onchange={(e) => setTheme(e.currentTarget.value as ThemePreference)}>
-          {#each THEMES as v (v)}<option value={v}>{de.theme[v]}</option>{/each}
+          {#each THEMES as v (v)}<option value={v}>{messages.theme[v]}</option>{/each}
         </select>
       </div>
     </section>
@@ -251,7 +266,7 @@
     <PasskeyList />
     <SessionList />
   {:else}
-    <p class="loading">{de.loading}</p>
+    <p class="loading">{messages.loading}</p>
   {/if}
       </div>
 

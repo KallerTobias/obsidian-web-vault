@@ -118,7 +118,7 @@
 
 <script lang="ts">
   import { untrack } from 'svelte';
-  import { de } from '../i18n/de';
+  import { t } from '../i18n';
   import { adjacency, colorFor, endId, nodeRadius, withPositions } from './data';
 
   /**
@@ -131,7 +131,7 @@
     settings,
     mode = '2d',
     highlight,
-    label = de.graph.label,
+    label = t.graph.label,
     fit = false,
     onOpen,
     onTag,
@@ -355,7 +355,7 @@
 
 <div class="graph-canvas">
   <div bind:this={container} class="surface" role="img" aria-label={label}></div>
-  {#if failed}<p class="failed" role="alert">{de.graph.renderFailed}</p>{/if}
+  {#if failed}<p class="failed" role="alert">{t.graph.renderFailed}</p>{/if}
 </div>
 
 <style>

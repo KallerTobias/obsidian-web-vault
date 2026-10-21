@@ -1,6 +1,6 @@
 <script lang="ts">
   import { basename } from '@shared/normalize';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import { workspace } from '../lib/stores/workspace';
 
   /** Main area without tabs: a hint and the recently opened files. */
@@ -8,10 +8,10 @@
 </script>
 
 <div class="empty-state">
-  <h2>{de.emptyState.title}</h2>
-  <p>{de.emptyState.hint}</p>
+  <h2>{t.emptyState.title}</h2>
+  <p>{t.emptyState.hint}</p>
   {#if recent.length}
-    <h3>{de.emptyState.recent}</h3>
+    <h3>{t.emptyState.recent}</h3>
     <ul>
       {#each recent as path (path)}
         <li>

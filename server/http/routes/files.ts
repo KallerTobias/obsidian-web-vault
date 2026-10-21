@@ -54,7 +54,7 @@ const FORBIDDEN_NAME_ERROR = 'Der Name darf keines dieser Zeichen enthalten: \\ 
 
 /** Rejects `path` if its last segment is a new name with forbidden characters (existing names may keep them). */
 function assertValidNewName(path: string): void {
-  if (FORBIDDEN_NAME.test(basename(path))) throw new HttpError(400, FORBIDDEN_NAME_ERROR);
+  if (FORBIDDEN_NAME.test(basename(path))) throw new HttpError(400, FORBIDDEN_NAME_ERROR, 'INVALID_NAME');
 }
 
 /**
@@ -71,7 +71,7 @@ async function assertValidNewSegments(paths: AppDeps['paths'], path: string): Pr
     );
     if (exists) continue;
     // From here on every segment is new.
-    if (segs.slice(i).some((s) => FORBIDDEN_NAME.test(s))) throw new HttpError(400, FORBIDDEN_NAME_ERROR);
+    if (segs.slice(i).some((s) => FORBIDDEN_NAME.test(s))) throw new HttpError(400, FORBIDDEN_NAME_ERROR, 'INVALID_NAME');
     return;
   }
 }
@@ -129,6 +129,7 @@ export async function fileRoutes(app: FastifyInstance, deps: AppDeps): Promise<v
 
   const conflict = (err: ConflictError) => ({
     error: 'Konflikt: Datei wurde zwischenzeitlich geändert',
+    code: 'CONFLICT',
     diskContent: err.diskContent,
     diskVersion: err.diskVersion,
   });
@@ -138,8 +139,8 @@ export async function fileRoutes(app: FastifyInstance, deps: AppDeps): Promise<v
   app.get<{ Querystring: { path: string } }>('/api/note', { schema: { querystring: pathQuery } }, async (req) => {
     const path = normalizeRel(req.query.path);
     const { size, mime } = await files.openBytes(path);
-    if (!isText(mime)) throw new HttpError(400, 'Keine Textdatei');
-    if (size > NOTE_READ_MAX) throw new HttpError(413, 'Datei zu groß zum Bearbeiten');
+    if (!isText(mime)) throw new HttpError(400, 'Keine Textdatei', 'NOT_TEXT');
+    if (size > NOTE_READ_MAX) throw new HttpError(413, 'Datei zu groß zum Bearbeiten', 'FILE_TOO_LARGE');
     const { content, version } = await files.read(path);
     return { content, version, readonly: paths.isReadonly(path) };
   });
@@ -185,7 +186,7 @@ export async function fileRoutes(app: FastifyInstance, deps: AppDeps): Promise<v
     },
     async (req, reply) => {
       const path = normalizeRel(req.body.path);
-      if (path === '') throw new HttpError(400, 'Ungültiger Pfad');
+      if (path === '') throw new HttpError(400, 'Ungültiger Pfad', 'INVALID_PATH');
       await assertValidNewSegments(paths, path);
       let version: Version;
       try {
@@ -204,7 +205,7 @@ export async function fileRoutes(app: FastifyInstance, deps: AppDeps): Promise<v
     { schema: { body: { type: 'object', required: ['path'], properties: { path: pathStr } } } },
     async (req) => {
       const path = normalizeRel(req.body.path);
-      if (path === '') throw new HttpError(400, 'Ungültiger Pfad');
+      if (path === '') throw new HttpError(400, 'Ungültiger Pfad', 'INVALID_PATH');
       await assertValidNewSegments(paths, path);
       if (await files.mkdir(path)) events.publish({ type: 'created', path });
       return { path };
@@ -226,7 +227,7 @@ export async function fileRoutes(app: FastifyInstance, deps: AppDeps): Promise<v
       const from = normalizeRel(req.body.from);
       const to = normalizeRel(req.body.to);
       if (from !== '' && to.startsWith(`${from}/`)) {
-        throw new HttpError(400, 'Ein Ordner kann nicht in sich selbst verschoben werden');
+        throw new HttpError(400, 'Ein Ordner kann nicht in sich selbst verschoben werden', 'MOVE_INTO_SELF');
       }
       // Moving keeps the name (even an old one with `#`); a changed name must be valid.
       if (basename(to) !== basename(from)) assertValidNewName(to);
@@ -265,7 +266,7 @@ export async function fileRoutes(app: FastifyInstance, deps: AppDeps): Promise<v
         .code(416)
         .type('application/json; charset=utf-8')
         .header('content-range', `bytes */${file.size}`)
-        .send({ error: 'Ungültiger Bereich' });
+        .send({ error: 'Ungültiger Bereich', code: 'INVALID_RANGE' });
     }
     if (range) {
       return reply
@@ -292,16 +293,16 @@ export async function fileRoutes(app: FastifyInstance, deps: AppDeps): Promise<v
           }
           const staged = await files.stageUpload(part.file);
           upload = { filename: part.filename, mimetype: part.mimetype, staged };
-          if (part.file.truncated) throw new HttpError(413, 'Anfrage zu groß');
+          if (part.file.truncated) throw new HttpError(413, 'Anfrage zu groß', 'TOO_LARGE');
           continue;
         }
-        if (part.valueTruncated || typeof part.value !== 'string') throw new HttpError(400, 'Ungültige Anfrage');
+        if (part.valueTruncated || typeof part.value !== 'string') throw new HttpError(400, 'Ungültige Anfrage', 'BAD_REQUEST');
         if (part.fieldname === 'notePath') {
-          if (part.value.length > PATH_MAX) throw new HttpError(400, 'Ungültiger Pfad');
+          if (part.value.length > PATH_MAX) throw new HttpError(400, 'Ungültiger Pfad', 'INVALID_PATH');
           notePath = part.value;
         } else if (part.fieldname === 'pasted') pasted = part.value === '1' || part.value === 'true';
       }
-      if (!upload) throw new HttpError(400, 'Keine Datei übergeben');
+      if (!upload) throw new HttpError(400, 'Keine Datei übergeben', 'NO_FILE');
       const note = normalizeRel(notePath);
 
       const name = pasted

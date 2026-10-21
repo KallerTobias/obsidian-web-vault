@@ -30,7 +30,7 @@
 
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
 
   /**
    * Three-column layout like Obsidian: left sidebar (nav), main area, right sidebar (aside).
@@ -41,7 +41,7 @@
     main,
     right,
     toolbar,
-    title = de.appName,
+    title = t.appName,
   }: { left: Snippet; main: Snippet; right: Snippet; toolbar?: Snippet; title?: string } = $props();
 
   let widths = $state({ left: loadWidth('left'), right: loadWidth('right') });
@@ -150,7 +150,7 @@
     class:active={dragging === side}
     role="separator"
     aria-orientation="vertical"
-    aria-label={side === 'left' ? de.shell.resizeLeft : de.shell.resizeRight}
+    aria-label={side === 'left' ? t.shell.resizeLeft : t.shell.resizeRight}
     aria-controls="shell-{side}"
     aria-valuenow={widths[side]}
     aria-valuemin={MIN_WIDTH}
@@ -176,7 +176,7 @@
       bind:this={toggles.left}
       type="button"
       class="icon-button"
-      aria-label={de.shell.toggleLeft}
+      aria-label={t.shell.toggleLeft}
       aria-controls="shell-left"
       aria-expanded={isOpen('left')}
       onclick={() => toggle('left')}
@@ -191,7 +191,7 @@
       bind:this={toggles.right}
       type="button"
       class="icon-button"
-      aria-label={de.shell.toggleRight}
+      aria-label={t.shell.toggleRight}
       aria-controls="shell-right"
       aria-expanded={isOpen('right')}
       onclick={() => toggle('right')}
@@ -208,7 +208,7 @@
       bind:this={panels.left}
       class="side side-left"
       class:overlay={narrow}
-      aria-label={de.shell.leftSidebar}
+      aria-label={t.shell.leftSidebar}
       tabindex="-1"
       hidden={!isOpen('left')}
       inert={narrow && overlay === 'right'}
@@ -218,7 +218,7 @@
 
     {#if !narrow && docked.left}{@render splitter('left')}{/if}
 
-    <main class="main" aria-label={de.shell.main} inert={narrow && overlay !== null}>
+    <main class="main" aria-label={t.shell.main} inert={narrow && overlay !== null}>
       {@render main()}
     </main>
 
@@ -229,7 +229,7 @@
       bind:this={panels.right}
       class="side side-right"
       class:overlay={narrow}
-      aria-label={de.shell.rightSidebar}
+      aria-label={t.shell.rightSidebar}
       tabindex="-1"
       hidden={!isOpen('right')}
       inert={narrow && overlay === 'left'}
@@ -238,7 +238,7 @@
     </aside>
 
     {#if narrow && overlay}
-      <button type="button" class="backdrop" aria-label={de.shell.closeOverlay} onclick={closeOverlay}></button>
+      <button type="button" class="backdrop" aria-label={t.shell.closeOverlay} onclick={closeOverlay}></button>
     {/if}
   </div>
 </div>

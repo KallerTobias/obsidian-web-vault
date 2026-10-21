@@ -1,3 +1,5 @@
+import { lang } from './i18n';
+
 export interface TagNode {
   /** Last segment (`todo` for `projekt/alpha/todo`). */
   name: string;
@@ -31,7 +33,7 @@ export function buildTagTree(tags: readonly { tag: string; count: number }[]): T
     }
   }
   const sort = (nodes: TagNode[]) => {
-    nodes.sort((a, b) => a.name.localeCompare(b.name, 'de', { sensitivity: 'base' }));
+    nodes.sort((a, b) => a.name.localeCompare(b.name, lang, { sensitivity: 'base' }));
     for (const n of nodes) sort(n.children);
   };
   sort(roots);

@@ -23,7 +23,7 @@
 
 <script lang="ts">
   import type { GraphData } from '../lib/api';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import { activeNote } from '../lib/stores/active-note';
   import { graphSettings, watchGraph } from '../lib/stores/graph';
   import { vault } from '../lib/stores/vault';
@@ -35,10 +35,10 @@
 
   /** Right sidebar: properties, backlinks, outline and local graph of the active tab's note. */
   const titles: Record<Section, string> = {
-    properties: de.panel.properties,
-    backlinks: de.panel.backlinks,
-    outline: de.panel.outline,
-    graph: de.panel.localGraph,
+    properties: t.panel.properties,
+    backlinks: t.panel.backlinks,
+    outline: t.panel.outline,
+    graph: t.panel.localGraph,
   };
 
   let collapsed = $state<Section[]>(loadCollapsed());
@@ -78,7 +78,7 @@
 </script>
 
 {#if !path}
-  <p class="empty">{de.panel.noNote}</p>
+  <p class="empty">{t.panel.noNote}</p>
 {:else}
   <div class="right-panel">
     {#each SECTIONS as s (s)}
@@ -95,12 +95,12 @@
               <BacklinksPanel {path} {aliases} onOpen={(source, line, newTab) => openNote(source, line, newTab)} />
             {:else if s === 'graph'}
               {#if graphFailed}
-                <p class="empty" role="alert">{de.localGraph.loadFailed}</p>
+                <p class="empty" role="alert">{t.localGraph.loadFailed}</p>
               {:else}
                 <LocalGraph data={graph} settings={$graphSettings} mode="local" highlight={path} onOpen={(p, newTab) => openNote(p, undefined, newTab)} />
               {/if}
             {:else if !note}
-              <p class="empty">{de.panel.loading}</p>
+              <p class="empty">{t.panel.loading}</p>
             {:else if s === 'properties'}
               <PropertiesPanel {note} />
             {:else}

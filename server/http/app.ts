@@ -143,7 +143,7 @@ export function buildApp(deps: AppDeps, opts: AppOptions = {}): FastifyInstance 
   app.register(rateLimit, {
     global: false,
     keyGenerator: (req) => clientIp(req, config),
-    errorResponseBuilder: () => new HttpError(429, 'Zu viele Versuche, bitte eine Minute warten'),
+    errorResponseBuilder: () => new HttpError(429, 'Zu viele Versuche, bitte eine Minute warten', 'RATE_LIMITED'),
   });
 
   app.addHook('onRequest', requireSameOrigin(config.publicUrl));
@@ -154,14 +154,14 @@ export function buildApp(deps: AppDeps, opts: AppOptions = {}): FastifyInstance 
 
   app.setErrorHandler((err: FastifyError | HttpError, req, reply) => {
     if (err instanceof HttpError) {
-      return reply.code(err.statusCode).send({ error: err.message, ...(err.code ? { code: err.code } : {}) });
+      return reply.code(err.statusCode).send({ error: err.message, code: err.code });
     }
     const status = err.statusCode ?? 500;
-    if (status === 429) return reply.code(429).send({ error: 'Zu viele Anfragen' });
-    if (status === 413) return reply.code(413).send({ error: 'Anfrage zu groß' });
-    if (status >= 400 && status < 500) return reply.code(status).send({ error: 'Ungültige Anfrage' });
+    if (status === 429) return reply.code(429).send({ error: 'Zu viele Anfragen', code: 'TOO_MANY_REQUESTS' });
+    if (status === 413) return reply.code(413).send({ error: 'Anfrage zu groß', code: 'TOO_LARGE' });
+    if (status >= 400 && status < 500) return reply.code(status).send({ error: 'Ungültige Anfrage', code: 'BAD_REQUEST' });
     req.log.error({ err }, 'Unerwarteter Fehler');
-    return reply.code(500).send({ error: 'Interner Fehler' });
+    return reply.code(500).send({ error: 'Interner Fehler', code: 'INTERNAL' });
   });
   const webDir = opts.webDir !== undefined && existsSync(join(opts.webDir, 'index.html')) ? opts.webDir : undefined;
   if (webDir) registerWebApp(app, webDir);
@@ -169,7 +169,7 @@ export function buildApp(deps: AppDeps, opts: AppOptions = {}): FastifyInstance 
     if (webDir && wantsSpa(req)) {
       return reply.header('cache-control', 'no-cache').type('text/html; charset=utf-8').sendFile('index.html');
     }
-    return reply.code(404).send({ error: 'Nicht gefunden' });
+    return reply.code(404).send({ error: 'Nicht gefunden', code: 'NOT_FOUND' });
   });
 
   app.register(authRoutes, deps);

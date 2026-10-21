@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createFileLookup } from '@shared/resolve';
   import { api } from '../lib/api';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import { vault } from '../lib/stores/vault';
   import { workspace } from '../lib/stores/workspace';
   import GraphView from '../lib/graph/GraphView.svelte';
@@ -48,11 +48,11 @@
   <div id={panelId} class="panel" role="tabpanel" aria-labelledby={tabId(index)} tabindex="-1">
     {#if tab.deleted && tab.kind !== 'note'}
       <div class="notice" role="status">
-        <p>{de.tabs.deleted}</p>
-        <button type="button" class="link-button" onclick={() => workspace.close(index)}>{de.tabs.closeTab}</button>
+        <p>{t.tabs.deleted}</p>
+        <button type="button" class="link-button" onclick={() => workspace.close(index)}>{t.tabs.closeTab}</button>
       </div>
     {:else if tab.kind === 'note' && tab.path}
-      {#if createError}<p class="notice" role="alert">{de.reading.createFailed}</p>{/if}
+      {#if createError}<p class="notice" role="alert">{t.reading.createFailed}</p>{/if}
       <!-- A deleted note stays open: unsaved text must not vanish (NoteView offers to save it anew). -->
       {#key tab.path}
         <NoteView
@@ -71,7 +71,7 @@
         <MediaView path={tab.path} />
       {/key}
     {:else if tab.kind === 'graph'}
-      {#if createError}<p class="notice" role="alert">{de.graph.createFailed}</p>{/if}
+      {#if createError}<p class="notice" role="alert">{t.graph.createFailed}</p>{/if}
       <GraphView
         onOpen={(path, newTab) => workspace.open(path, { newTab })}
         {onTag}

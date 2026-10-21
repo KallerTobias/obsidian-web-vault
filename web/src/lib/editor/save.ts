@@ -1,4 +1,5 @@
 import { ApiError, type ConflictBody } from '../api';
+import { isLanguageReload, t } from '../i18n';
 import { isAtOrBelow, movePath } from '../tree';
 
 /** What the saver needs from `api.note` (injectable for tests). */
@@ -60,6 +61,28 @@ export function hasUnsavedNotes(): boolean {
 /** The page is unloading: store every open note's unsaved text as a draft. */
 export function keepAllDrafts(): void {
   for (const s of openSavers) s.keepDraft();
+}
+
+/**
+ * The page is being left (`beforeunload`): keep unsaved text as drafts and let the browser ask. Not
+ * for the reload of a language change: the drafts come back after it, and cancelling it would leave
+ * the new language stored but not shown, to switch silently on the next reload.
+ */
+export function warnBeforeUnload(e: BeforeUnloadEvent): void {
+  if (!hasUnsavedNotes()) return;
+  keepAllDrafts();
+  if (isLanguageReload()) return;
+  e.preventDefault();
+  e.returnValue = t.editor.unloadWarning;
+}
+
+/**
+ * Before a deliberate reload (language change): save every open note now instead of after the debounce
+ * and wait for it. Whatever still fails (offline, logged out, conflict) stays as a draft for after the reload.
+ */
+export async function saveAllBeforeReload(): Promise<void> {
+  await Promise.all([...openSavers, ...closingSavers].map((s) => s.flush().catch(() => {})));
+  keepAllDrafts();
 }
 
 /**
@@ -477,7 +500,7 @@ export class NoteSaver {
         if (!(err instanceof ApiError && err.status === 409)) throw err;
       }
     }
-    throw new Error('Kein freier Name für die Konfliktkopie');
+    throw new Error(t.conflict.noFreeCopyName);
   }
 
   /**

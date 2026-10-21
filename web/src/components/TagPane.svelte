@@ -24,7 +24,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { api } from '../lib/api';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import { events } from '../lib/stores/events';
   import { buildTagTree, type TagNode } from '../lib/tags';
 
@@ -77,7 +77,7 @@
             type="button"
             class="twisty"
             class:open={isOpen}
-            aria-label="{isOpen ? de.tags.collapse : de.tags.expand}: {node.name}"
+            aria-label="{isOpen ? t.tags.collapse : t.tags.expand}: {node.name}"
             onclick={() => toggle(node.tag)}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
@@ -85,7 +85,7 @@
         {:else}
           <span class="twisty-gap"></span>
         {/if}
-        <button type="button" class="tag" aria-label={de.tags.count(`#${node.tag}`, node.count)} onclick={() => onSelect(node.tag)}>
+        <button type="button" class="tag" aria-label={t.tags.count(`#${node.tag}`, node.count)} onclick={() => onSelect(node.tag)}>
           <span class="name">#{node.name}</span>
           <span class="count" aria-hidden="true">{node.count}</span>
         </button>
@@ -100,13 +100,13 @@
 <div class="tag-pane">
   {#if status === 'error'}
     <div role="alert">
-      <p>{de.tags.loadFailed}</p>
-      <button type="button" class="link-button" onclick={() => void load()}>{de.retry}</button>
+      <p>{t.tags.loadFailed}</p>
+      <button type="button" class="link-button" onclick={() => void load()}>{t.retry}</button>
     </div>
   {:else if status === 'ready' && tree.length === 0}
-    <p class="empty">{de.tags.none}</p>
+    <p class="empty">{t.tags.none}</p>
   {:else}
-    <ul role="tree" aria-label={de.tags.label}>{@render branch(tree, 0)}</ul>
+    <ul role="tree" aria-label={t.tags.label}>{@render branch(tree, 0)}</ul>
   {/if}
 </div>
 

@@ -7,7 +7,7 @@ import { Annotation, Compartment, EditorSelection, EditorState, type Extension, 
 import { drawSelection, EditorView, keymap } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 import type { FileLookup } from '@shared/resolve';
-import { de } from '../i18n/de';
+import { t } from '../i18n';
 import { tagCompletions, wikilinkCompletions, type WikilinkSource } from './autocomplete';
 import { obsidianKeymap } from './keymap';
 import { pasteImages, type PasteOptions } from './paste';
@@ -155,7 +155,7 @@ export function createEditor(parent: HTMLElement, opts: EditorOptions): EditorHa
         EditorState.readOnly.of(opts.readonly),
         // CRLF files stay CRLF (by default CodeMirror would write every line break as LF).
         opts.doc.includes('\r\n') ? EditorState.lineSeparator.of('\r\n') : [],
-        EditorView.contentAttributes.of({ 'aria-label': de.editor.editorLabel, spellcheck: 'true' }),
+        EditorView.contentAttributes.of({ 'aria-label': t.editor.editorLabel, spellcheck: 'true' }),
         mode.of(modeExtensions(opts.mode, opts)),
         EditorView.updateListener.of((u) => {
           if (u.docChanged && !u.transactions.some((t) => t.annotation(external))) opts.onChange(u.state.sliceDoc());

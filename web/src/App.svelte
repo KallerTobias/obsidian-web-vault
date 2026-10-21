@@ -2,6 +2,7 @@
   import { onMount, tick } from 'svelte';
   import CommandPalette from './components/CommandPalette.svelte';
   import FileTree from './components/FileTree.svelte';
+  import LanguageSelect from './components/LanguageSelect.svelte';
   import Login from './components/Login.svelte';
   import QuickSwitcher from './components/QuickSwitcher.svelte';
   import RightPanel from './components/RightPanel.svelte';
@@ -16,11 +17,12 @@
   import Tabs from './components/Tabs.svelte';
   import ThemeToggle from './components/ThemeToggle.svelte';
   import { api } from './lib/api';
-  import { applyRename, hasUnsavedNotes, keepAllDrafts } from './lib/editor/save';
+  import { applyRename, saveAllBeforeReload, warnBeforeUnload } from './lib/editor/save';
   import { registerCommandActions } from './lib/commands';
   import { openDailyNote } from './lib/new-note';
-  import { de } from './lib/i18n/de';
+  import { beforeLanguageReload, t } from './lib/i18n';
   import { events } from './lib/stores/events';
+  import { graphSettings } from './lib/stores/graph';
   import { session } from './lib/stores/session';
   import { editorSettings } from './lib/stores/settings';
   import { theme } from './lib/stores/theme';
@@ -69,9 +71,9 @@
     notice = null;
     try {
       const r = await openDailyNote();
-      if (r.status === 'disabled') notice = { text: de.daily.disabled, settings: true };
+      if (r.status === 'disabled') notice = { text: t.daily.disabled, settings: true };
     } catch (err) {
-      notice = { text: de.daily.failed(err instanceof Error ? err.message : String(err)), settings: false };
+      notice = { text: t.daily.failed(err instanceof Error ? err.message : String(err)), settings: false };
     }
   }
 
@@ -164,16 +166,11 @@
     sessionState.set('login');
   }
 
-  /** Leaving with unsaved notes: keep their text as drafts and let the browser ask. */
-  function beforeUnload(e: BeforeUnloadEvent): void {
-    if (!hasUnsavedNotes()) return;
-    keepAllDrafts();
-    e.preventDefault();
-    e.returnValue = de.editor.unloadWarning;
-  }
-
   onMount(() => {
     void load();
+    // A language change reloads the page: open notes and graph settings are saved first
+    // (what still fails stays as a draft, see saveAllBeforeReload).
+    return beforeLanguageReload(() => Promise.all([saveAllBeforeReload(), graphSettings.flush()]));
   });
 </script>
 
@@ -181,26 +178,34 @@
   <div class="auth-screen" aria-busy="true">
     {#if loadFailed}
       <div class="auth-card" role="alert">
-        <p>{de.loadFailed}</p>
-        <button type="button" class="button-primary" onclick={load}>{de.retry}</button>
+        <p>{t.loadFailed}</p>
+        <button type="button" class="button-primary" onclick={load}>{t.retry}</button>
       </div>
     {:else}
-      <p class="loading">{de.loading}</p>
+      <p class="loading">{t.loading}</p>
     {/if}
   </div>
 {:else if $sessionState === 'setup'}
   <div class="auth-screen">
     <Setup onSuccess={enterApp} onLogin={hasPasskeys ? () => sessionState.set('login') : undefined} {publicOrigin} />
+    <div class="auth-language"><LanguageSelect /></div>
   </div>
 {:else if $sessionState === 'login'}
   <div class="auth-screen">
     <Login onSuccess={enterApp} {publicOrigin} />
+    <div class="auth-language"><LanguageSelect /></div>
   </div>
 {:else}
   <Shell bind:this={shell}>
     {#snippet toolbar()}
       <ThemeToggle />
-      <button type="button" class="icon-button" aria-label={de.shell.logout} title={de.shell.logout} onclick={logout}>
+      <button type="button" class="icon-button" aria-label={t.shell.settings} title={t.shell.settings} onclick={() => workspace.openSettings()}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+      </button>
+      <button type="button" class="icon-button" aria-label={t.shell.logout} title={t.shell.logout} onclick={logout}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
         </svg>
@@ -210,19 +215,19 @@
       <div class="left">
         <ViewSwitcher view={sidebarView} onSelect={(v) => (v === 'search' ? openSearch() : showView(v))} onGraph={() => workspace.openGraph()} />
         <div class="view" id="view-files" role="tabpanel" aria-labelledby="view-tab-files" hidden={sidebarView !== 'files'}>
-      <Sidebar title={de.shell.files}>
+      <Sidebar title={t.shell.files}>
         {#snippet actions()}
-          <button type="button" class="icon-button" aria-label={de.files.newNote} title={de.files.newNote} onclick={() => fileTree?.newNoteInDefaultFolder()} disabled={!$tree}>
+          <button type="button" class="icon-button" aria-label={t.files.newNote} title={t.files.newNote} onclick={() => fileTree?.newNoteInDefaultFolder()} disabled={!$tree}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M12 12v6M9 15h6" />
             </svg>
           </button>
-          <button type="button" class="icon-button" aria-label={de.files.newFolder} title={de.files.newFolder} onclick={() => fileTree?.newFolderInRoot()} disabled={!$tree}>
+          <button type="button" class="icon-button" aria-label={t.files.newFolder} title={t.files.newFolder} onclick={() => fileTree?.newFolderInRoot()} disabled={!$tree}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 11v5M9.5 13.5h5" />
             </svg>
           </button>
-          <button type="button" class="icon-button" aria-label={de.files.collapseAll} title={de.files.collapseAll} onclick={() => fileTree?.collapseAll()} disabled={!$tree}>
+          <button type="button" class="icon-button" aria-label={t.files.collapseAll} title={t.files.collapseAll} onclick={() => fileTree?.collapseAll()} disabled={!$tree}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M7 20l5-5 5 5M7 4l5 5 5-5" />
             </svg>
@@ -243,21 +248,21 @@
           />
         {:else if treeFailed}
           <div role="alert">
-            <p>{de.files.loadFailed}</p>
-            <button type="button" class="link-button" onclick={loadVault}>{de.retry}</button>
+            <p>{t.files.loadFailed}</p>
+            <button type="button" class="link-button" onclick={loadVault}>{t.retry}</button>
           </div>
         {:else}
-          <p class="loading">{de.loading}</p>
+          <p class="loading">{t.loading}</p>
         {/if}
       </Sidebar>
         </div>
         <div class="view" id="view-search" role="tabpanel" aria-labelledby="view-tab-search" hidden={sidebarView !== 'search'}>
-          <Sidebar title={de.sidebar.search}>
+          <Sidebar title={t.sidebar.search}>
             <SearchPane bind:this={searchPane} bind:query={searchQuery} onOpen={(path, opts) => workspace.open(path, opts)} />
           </Sidebar>
         </div>
         <div class="view" id="view-tags" role="tabpanel" aria-labelledby="view-tab-tags" hidden={sidebarView !== 'tags'}>
-          <Sidebar title={de.sidebar.tags}><TagPane onSelect={searchTag} /></Sidebar>
+          <Sidebar title={t.sidebar.tags}><TagPane onSelect={searchTag} /></Sidebar>
         </div>
       </div>
     {/snippet}
@@ -268,16 +273,16 @@
           <div class="notice" role="status">
             <span>{notice.text}</span>
             {#if notice.settings}
-              <button type="button" class="link-button" onclick={() => { workspace.openSettings(); notice = null; }}>{de.daily.toSettings}</button>
+              <button type="button" class="link-button" onclick={() => { workspace.openSettings(); notice = null; }}>{t.daily.toSettings}</button>
             {/if}
-            <button type="button" class="link-button" onclick={() => (notice = null)}>{de.daily.dismiss}</button>
+            <button type="button" class="link-button" onclick={() => (notice = null)}>{t.daily.dismiss}</button>
           </div>
         {/if}
         <div class="tab-content"><TabContent onTag={searchTag} /></div>
       </div>
     {/snippet}
     {#snippet right()}
-      <Sidebar title={de.shell.details}><RightPanel /></Sidebar>
+      <Sidebar title={t.shell.details}><RightPanel /></Sidebar>
     {/snippet}
   </Shell>
 
@@ -291,7 +296,7 @@
   <SessionExpired />
 {/if}
 
-<svelte:window onbeforeunload={beforeUnload} onkeydown={onHotkey} />
+<svelte:window onbeforeunload={warnBeforeUnload} onkeydown={onHotkey} />
 
 <style>
   .left {

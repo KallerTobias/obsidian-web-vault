@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import { addListItems, DATETIME_RE, inferPropertyType, listValue } from '../lib/properties';
 
   /**
@@ -31,7 +31,7 @@
   );
   const isTags = $derived(type === 'tags');
   const items = $derived(type === 'list' || type === 'tags' ? listValue(value, isTags) : []);
-  const label = $derived(de.properties.valueLabel(name));
+  const label = $derived(t.properties.valueLabel(name));
   const asText = (v: unknown) => (v == null ? '' : v instanceof Date ? v.toISOString() : String(v));
 
   function commitKey(el: HTMLInputElement): void {
@@ -122,7 +122,7 @@
     type="text"
     value={name}
     data-original={name}
-    aria-label={de.properties.keyLabel}
+    aria-label={t.properties.keyLabel}
     disabled={readonly}
     spellcheck="false"
     onblur={(e) => commitKey(e.currentTarget)}
@@ -130,7 +130,7 @@
   />
   <div class="value">
     {#if nested}
-      <span class="nested" title={de.properties.nested}>{JSON.stringify(value)}</span>
+      <span class="nested" title={t.properties.nested}>{JSON.stringify(value)}</span>
     {:else if type === 'checkbox'}
       <input type="checkbox" checked={value === true} aria-label={label} disabled={readonly} onchange={(e) => {
         const checked = e.currentTarget.checked;
@@ -151,12 +151,12 @@
           <span class="chip" class:tag={isTags}>
             {isTags ? `#${item}` : item}
             {#if !readonly}
-              <button type="button" class="chip-remove" aria-label={de.properties.removeItem(item)} onclick={() => removeItem(item)}>×</button>
+              <button type="button" class="chip-remove" aria-label={t.properties.removeItem(item)} onclick={() => removeItem(item)}>×</button>
             {/if}
           </span>
         {/each}
         {#if !readonly}
-          <input class="chip-input" type="text" placeholder={de.properties.addItem} aria-label={label}
+          <input class="chip-input" type="text" placeholder={t.properties.addItem} aria-label={label}
             onkeydown={listKey} onblur={(e) => addItems(e.currentTarget)} />
         {/if}
       </div>
@@ -166,7 +166,7 @@
     {/if}
   </div>
   {#if !readonly}
-    <button type="button" class="icon-button remove" aria-label={de.properties.remove(name)} title={de.properties.remove(name)} onclick={onRemove}>
+    <button type="button" class="icon-button remove" aria-label={t.properties.remove(name)} title={t.properties.remove(name)} onclick={onRemove}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
     </button>
   {/if}

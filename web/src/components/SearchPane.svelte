@@ -7,7 +7,7 @@
   import { basename, dirname } from '@shared/normalize';
   import { api, type SearchHit } from '../lib/api';
   import { segments } from '../lib/highlight';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
 
   /**
    * Full-text search of the vault: the field takes the operators of the server (`path:` `tag:` `file:`,
@@ -70,8 +70,8 @@
       bind:value={query}
       type="search"
       class="text-input"
-      aria-label={de.search.label}
-      placeholder={de.search.placeholder}
+      aria-label={t.search.label}
+      placeholder={t.search.placeholder}
       autocomplete="off"
       spellcheck="false"
     />
@@ -79,11 +79,11 @@
 
   <div class="status" role="status" aria-live="polite">
     {#if status === 'loading'}
-      {de.search.searching}
+      {t.search.searching}
     {:else if status === 'done'}
-      {hits.length === 0 ? de.search.none : de.search.results(hits.length)}
+      {hits.length === 0 ? t.search.none : t.search.results(hits.length)}
     {:else if status === 'error'}
-      {de.search.failed}
+      {t.search.failed}
     {/if}
   </div>
 
@@ -103,7 +103,7 @@
           <button
             type="button"
             class="match"
-            aria-label="{title(hit.path)}, {de.search.line(m.line + 1)}"
+            aria-label="{title(hit.path)}, {t.search.line(m.line + 1)}"
             onclick={(e) => onOpen(hit.path, { newTab: e.ctrlKey || e.metaKey, line: m.line })}
           >
             <span class="line-no" aria-hidden="true">{m.line + 1}</span>

@@ -4,7 +4,7 @@
   import { get } from 'svelte/store';
   import { api, ApiError, type Backlink } from '../lib/api';
   import { linkedSegments, linkMention, mentionPattern, mentionSegments, type Segment } from '../lib/backlinks';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import { events } from '../lib/stores/events';
   import { editorSettings } from '../lib/stores/settings';
   import { vault } from '../lib/stores/vault';
@@ -85,7 +85,7 @@
     try {
       const note = await api.note.get(source);
       if (note.readonly) {
-        error = de.backlinks.linkReadonly;
+        error = t.backlinks.linkReadonly;
         return;
       }
       // The note itself may be missing from a lookup that is not reloaded yet (but must not count twice).
@@ -93,12 +93,12 @@
       const linkText = linkTextFor(path, source, lookup, get(editorSettings).newLinkFormat);
       const next = linkMention(note.content, line, names, linkText, context);
       if (next === null) {
-        error = de.backlinks.mentionGone;
+        error = t.backlinks.mentionGone;
         return;
       }
       await api.note.save(source, next, note.version);
     } catch (e) {
-      error = e instanceof ApiError && e.status === 409 ? de.backlinks.linkConflict : de.backlinks.linkFailed;
+      error = e instanceof ApiError && e.status === 409 ? t.backlinks.linkConflict : t.backlinks.linkFailed;
     } finally {
       busy = false;
       void load();
@@ -110,12 +110,12 @@
   <div class="group">
     <button type="button" class="group-header" aria-expanded={open[kind]} onclick={() => (open[kind] = !open[kind])}>
       <span class="chevron" aria-hidden="true">{open[kind] ? '▾' : '▸'}</span>
-      <span>{kind === 'linked' ? de.backlinks.linked : de.backlinks.unlinked}</span>
+      <span>{kind === 'linked' ? t.backlinks.linked : t.backlinks.unlinked}</span>
       <span class="count">{list.length}</span>
     </button>
     {#if open[kind]}
       {#if list.length === 0}
-        <p class="empty">{de.backlinks.none}</p>
+        <p class="empty">{t.backlinks.none}</p>
       {:else}
         <ul>
           {#each list as b (b.source)}
@@ -126,14 +126,14 @@
                   <button
                     type="button"
                     class="context-text"
-                    title={`${stripMd(b.source)} – ${de.backlinks.line(c.line + 1)}`}
+                    title={`${stripMd(b.source)} – ${t.backlinks.line(c.line + 1)}`}
                     onclick={(e) => onOpen(b.source, c.line, e.ctrlKey || e.metaKey)}
                   >
                     {#each segments(kind, c.text) as s, i (i)}{#if s.hit}<mark>{s.text}</mark>{:else}{s.text}{/if}{/each}
                   </button>
                   {#if kind === 'unlinked'}
-                    <button type="button" class="link-button link-it" title={de.backlinks.linkTitle} disabled={busy} onclick={() => linkIt(b.source, c.line, c.text)}>
-                      {de.backlinks.link}
+                    <button type="button" class="link-button link-it" title={t.backlinks.linkTitle} disabled={busy} onclick={() => linkIt(b.source, c.line, c.text)}>
+                      {t.backlinks.link}
                     </button>
                   {/if}
                 </div>
@@ -147,11 +147,11 @@
 {/snippet}
 
 {#if loadState === 'loading' && linked.length === 0 && unlinked.length === 0}
-  <p class="empty">{de.panel.loading}</p>
+  <p class="empty">{t.panel.loading}</p>
 {:else if loadState === 'error'}
   <div class="empty" role="alert">
-    <p>{de.backlinks.loadFailed}</p>
-    <button type="button" class="link-button" onclick={load}>{de.retry}</button>
+    <p>{t.backlinks.loadFailed}</p>
+    <button type="button" class="link-button" onclick={load}>{t.retry}</button>
   </div>
 {:else}
   {#if error}<p class="error" role="alert">{error}</p>{/if}

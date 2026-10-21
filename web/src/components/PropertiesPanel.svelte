@@ -1,7 +1,7 @@
 <script lang="ts">
   import { updateFrontmatter, type FmChange } from '@shared/frontmatter';
   import { tick } from 'svelte';
-  import { de } from '../lib/i18n/de';
+  import { t } from '../lib/i18n';
   import { readProperties } from '../lib/properties';
   import type { ActiveNote } from '../lib/stores/active-note';
   import PropertyField from './PropertyField.svelte';
@@ -44,14 +44,14 @@
       note.edit((text) => updateFrontmatter(text, build(text)));
       return true;
     } catch (e) {
-      error = e instanceof Refusal ? e.message : de.properties.failed(e instanceof Error ? e.message : String(e));
+      error = e instanceof Refusal ? e.message : t.properties.failed(e instanceof Error ? e.message : String(e));
       return false;
     }
   }
 
   function checkKey(key: string, text: string): void {
-    if (key === '') throw new Refusal(de.properties.emptyKey);
-    if (keysOf(text).includes(key)) throw new Refusal(de.properties.duplicate(key));
+    if (key === '') throw new Refusal(t.properties.emptyKey);
+    if (keysOf(text).includes(key)) throw new Refusal(t.properties.duplicate(key));
   }
 
   const rename = (from: string, to: string) =>
@@ -99,8 +99,8 @@
 <div class="properties">
   {#if properties.state === 'invalid'}
     <div class="notice warn" role="alert">
-      <p>{de.properties.invalid}</p>
-      <button type="button" class="link-button" onclick={() => note.openSource()}>{de.properties.openSource}</button>
+      <p>{t.properties.invalid}</p>
+      <button type="button" class="link-button" onclick={() => note.openSource()}>{t.properties.openSource}</button>
     </div>
   {:else}
     {#if error}<p class="notice warn" role="alert">{error}</p>{/if}
@@ -116,7 +116,7 @@
         />
       {/each}
     {:else if !adding}
-      <p class="empty">{de.properties.none}</p>
+      <p class="empty">{t.properties.none}</p>
     {/if}
     {#if !note.readonly}
       {#if adding}
@@ -124,14 +124,14 @@
           bind:this={newKey}
           class="new-key"
           type="text"
-          placeholder={de.properties.newKeyPlaceholder}
-          aria-label={de.properties.keyLabel}
+          placeholder={t.properties.newKeyPlaceholder}
+          aria-label={t.properties.keyLabel}
           spellcheck="false"
           onkeydown={newKeyDown}
           onblur={(e) => commitNew(e.currentTarget)}
         />
       {/if}
-      <button type="button" class="link-button add" onclick={startAdding}>{de.properties.add}</button>
+      <button type="button" class="link-button add" onclick={startAdding}>{t.properties.add}</button>
     {/if}
   {/if}
 </div>

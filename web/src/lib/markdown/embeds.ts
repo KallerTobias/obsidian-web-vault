@@ -1,7 +1,7 @@
 import { parseNote } from '@shared/parse';
 import { basename } from '@shared/normalize';
 import type { FileLookup } from '@shared/resolve';
-import { de } from '../i18n/de';
+import { t } from '../i18n';
 import { mediaKind } from '../media';
 import { fileUrl } from './remark-obsidian';
 import { renderMarkdown } from './render';
@@ -135,25 +135,25 @@ async function hydrateOne(el: HTMLElement, ctx: EmbedContext): Promise<void> {
   const path = el.dataset.embed!;
   const subpath = el.dataset.subpath || undefined;
   if (ctx.budget!.left <= 0) {
-    notice(el, de.embeds.tooMany);
+    notice(el, t.embeds.tooMany);
     el.dataset.embedState = 'over-budget';
     return;
   }
   ctx.budget!.left--;
   el.dataset.embedState = 'loading';
   if (!path.toLowerCase().endsWith('.md')) {
-    if (!mediaEmbed(el, path, subpath)) notice(el, de.media.unsupported);
+    if (!mediaEmbed(el, path, subpath)) notice(el, t.media.unsupported);
     el.dataset.embedState = 'done';
     return;
   }
   const key = embedKey(path, subpath);
   if (ctx.chain.includes(key)) {
-    notice(el, de.embeds.cycle);
+    notice(el, t.embeds.cycle);
     el.dataset.embedState = 'cycle';
     return;
   }
   if (ctx.depth + 1 > MAX_EMBED_DEPTH) {
-    notice(el, de.embeds.tooDeep);
+    notice(el, t.embeds.tooDeep);
     el.dataset.embedState = 'too-deep';
     return;
   }
@@ -161,13 +161,13 @@ async function hydrateOne(el: HTMLElement, ctx: EmbedContext): Promise<void> {
   try {
     text = await ctx.load(path);
   } catch {
-    notice(el, de.embeds.loadFailed);
+    notice(el, t.embeds.loadFailed);
     el.dataset.embedState = 'failed';
     return;
   }
   const section = extractSection(text, subpath);
   if (section === null) {
-    notice(el, de.embeds.sectionMissing(subpath!));
+    notice(el, t.embeds.sectionMissing(subpath!));
     el.dataset.embedState = 'missing';
     return;
   }

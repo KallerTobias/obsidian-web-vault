@@ -144,6 +144,22 @@ input {
   background: var(--background-secondary);
   overflow: auto;
 }
+/* Language choice in the corner of the login/setup screen (settings are not reachable there). */
+.auth-screen:has(> .auth-language) {
+  position: relative;
+  /* Room for the select, so a tall card on a phone does not slide underneath it. */
+  padding-top: calc(var(--size-5) + 44px);
+}
+.auth-language {
+  position: absolute;
+  top: var(--size-4);
+  right: var(--size-4);
+}
+.auth-language select {
+  width: auto;
+  max-width: calc(100vw - 2 * var(--size-4));
+  font-size: var(--font-ui-small);
+}
 .auth-card {
   width: min(100%, 380px);
   display: grid;
