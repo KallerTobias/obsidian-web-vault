@@ -1,0 +1,3 @@
+# Konflikt
+
+Ausgangstext.

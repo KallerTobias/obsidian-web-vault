@@ -1,0 +1,39 @@
+# Example compose file for obsidian-web-vault. Copy to compose.yml and adjust.
+services:
+  obsidian-web-vault:
+    image: ghcr.io/kallertobias/obsidian-web-vault:latest   # or build: { context: ., dockerfile: docker/Dockerfile }
+    container_name: obsidian-web-vault
+    restart: unless-stopped
+    ports:
+      # Bind to localhost (or a private interface) only: published ports bypass host firewalls
+      # such as UFW. Put a TLS-terminating reverse proxy or tunnel in front.
+      - "127.0.0.1:8080:8080"
+    volumes:
+      # Your Obsidian vault (read/write). obsidian-web-vault never chowns this folder.
+      - /path/to/your/vault:/vault
+      # App state: passkeys, sessions, settings. Not part of the vault.
+      - obsidian-web-vault-data:/data
+    environment:
+      # Required. The exact origin you type in the browser; passkeys are bound to its domain.
+      PUBLIC_URL: "https://vault.example.com"
+      # User/group the app runs as (default 1000:1000). MUST be the owner of your vault files (`ls -ln`);
+      # the app refuses to start if it cannot read and write the vault.
+      PUID: "1000"
+      PGID: "1000"
+      # New files get mode 664 / directories 775 with 002, so group writers (Syncthing, agents) keep access.
+      UMASK: "002"
+      # Time zone for generated names such as "Pasted image 20261021103000.png".
+      TZ: "Europe/Berlin"
+      # Sliding session lifetime in days.
+      # SESSION_DAYS: "14"
+      # Behind a reverse proxy: false (default) | true | number of proxy hops | comma-separated CIDRs.
+      # Only set this if the proxy overwrites X-Forwarded-For and strips CF-Connecting-IP.
+      # TRUST_PROXY: "1"
+      # Only behind Cloudflare (Tunnel/proxy): client IP from CF-Connecting-IP. Needs TRUST_PROXY.
+      # TRUST_CF_CONNECTING_IP: "true"
+      # Comma-separated globs: invisible to the app / visible but read-only.
+      # EXCLUDE_PATHS: "Private/**,Archive/**"
+      # READONLY_PATHS: "Templates/**"
+
+volumes:
+  obsidian-web-vault-data:

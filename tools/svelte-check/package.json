@@ -1,0 +1,11 @@
+{
+  "name": "obsidian-web-vault-svelte-check",
+  "private": true,
+  "description": "Separate toolchain: svelte-check needs the TypeScript JS API (v5/v6); the project itself uses TypeScript 7.",
+  "type": "module",
+  "devDependencies": {
+    "svelte": "^5.57.2",
+    "svelte-check": "4.7.7",
+    "typescript": "6.0.3"
+  }
+}

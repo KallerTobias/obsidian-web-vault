@@ -1,0 +1,111 @@
+/*
+ * Design tokens, close to Obsidian's default theme. `data-theme` on <html> holds the effective
+ * scheme (`light`/`dark`, set by stores/theme.ts); without it (before JS runs) the OS preference applies.
+ */
+:root {
+  --font-interface: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, 'Helvetica Neue',
+    Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  --font-text: var(--font-interface);
+  --font-monospace: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+
+  --font-ui-smaller: 0.75rem;
+  --font-ui-small: 0.8125rem;
+  --font-ui-medium: 0.9375rem;
+  --font-text-size: 1rem;
+  --line-height: 1.5;
+
+  --radius-s: 4px;
+  --radius-m: 8px;
+  --radius-l: 12px;
+  --size-2: 4px;
+  --size-3: 8px;
+  --size-4: 12px;
+  --size-5: 16px;
+  --size-6: 24px;
+  --header-height: 40px;
+  --splitter-hit: 8px;
+
+  --left-width-default: 260px;
+  --right-width-default: 300px;
+
+  /* Light (Obsidian default light) */
+  color-scheme: light;
+  --background-primary: #ffffff;
+  --background-primary-alt: #fafafa;
+  --background-secondary: #f6f6f6;
+  --background-secondary-alt: #ebebeb;
+  --background-modifier-hover: rgba(0, 0, 0, 0.06);
+  --background-modifier-active: rgba(0, 0, 0, 0.1);
+  --background-modifier-border: #e0e0e0;
+  --background-modifier-border-focus: #bdbdbd;
+  --background-modifier-error: #e93147;
+  --background-modifier-error-soft: rgba(233, 49, 71, 0.1);
+  --background-modifier-cover: rgba(10, 10, 10, 0.35);
+  --text-normal: #222222;
+  --text-muted: #5c5c5c;
+  --text-faint: #8a8a8a;
+  --text-error: #c4162a;
+  --text-on-accent: #ffffff;
+  --interactive-accent: #7c3aed;
+  --interactive-accent-hover: #6d28d9;
+  --text-accent: #7c3aed;
+  --text-selection: rgba(124, 58, 237, 0.2);
+  --focus-ring: #7c3aed;
+  --shadow-s: 0 1px 2px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-l: 0 8px 32px rgba(0, 0, 0, 0.18);
+
+  /* Graph (read by the graph canvas at runtime) */
+  --graph-node: #8a8a8a;
+  --graph-node-tag: #2f9e44;
+  --graph-node-attachment: #e8a317;
+  --graph-node-unresolved: #c4c4c4;
+  --graph-node-focused: #7c3aed;
+  --graph-line: #d4d4d4;
+  --graph-text: #222222;
+}
+
+/* Dark (Obsidian default dark). */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --background-primary: #1e1e1e;
+  --background-primary-alt: #242424;
+  --background-secondary: #262626;
+  --background-secondary-alt: #2e2e2e;
+  --background-modifier-hover: rgba(255, 255, 255, 0.07);
+  --background-modifier-active: rgba(255, 255, 255, 0.12);
+  --background-modifier-border: #363636;
+  --background-modifier-border-focus: #555555;
+  --background-modifier-error: #fb464c;
+  --background-modifier-error-soft: rgba(251, 70, 76, 0.14);
+  --background-modifier-cover: rgba(0, 0, 0, 0.55);
+  --text-normal: #dadada;
+  --text-muted: #b3b3b3;
+  --text-faint: #7f7f7f;
+  --text-error: #ff7b80;
+  --text-on-accent: #ffffff;
+  --interactive-accent: #8b5cf6;
+  --interactive-accent-hover: #9d74f8;
+  --text-accent: #a78bfa;
+  --text-selection: rgba(139, 92, 246, 0.33);
+  --focus-ring: #a78bfa;
+  --shadow-s: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-l: 0 8px 32px rgba(0, 0, 0, 0.6);
+
+  --graph-node: #9a9a9a;
+  --graph-node-tag: #51cf66;
+  --graph-node-attachment: #f5c542;
+  --graph-node-unresolved: #5a5a5a;
+  --graph-node-focused: #a78bfa;
+  --graph-line: #3f3f3f;
+  --graph-text: #dadada;
+}
+
+/* Before the script has set data-theme: at least no white flash for dark-mode users. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --background-primary: #1e1e1e;
+    --background-secondary: #262626;
+    --text-normal: #dadada;
+  }
+}

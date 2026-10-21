@@ -1,0 +1,276 @@
+/* Rendered notes (reading mode and embeds). The HTML comes from renderMarkdown, so these styles are global. */
+
+.markdown {
+  font-family: var(--font-text);
+  line-height: var(--line-height);
+  overflow-wrap: anywhere;
+}
+
+.reading-view {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--size-6);
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  margin: 1.4em 0 0.5em;
+  line-height: 1.25;
+  font-weight: 650;
+}
+.markdown h1 {
+  font-size: 1.8em;
+}
+.markdown h2 {
+  font-size: 1.5em;
+}
+.markdown h3 {
+  font-size: 1.25em;
+}
+.markdown h4 {
+  font-size: 1.1em;
+}
+.markdown > :first-child {
+  margin-top: 0;
+}
+
+.markdown p,
+.markdown ul,
+.markdown ol,
+.markdown blockquote,
+.markdown table,
+.markdown pre,
+.markdown details {
+  margin: 0 0 1em;
+}
+
+.markdown a {
+  color: var(--text-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.markdown a.internal-link {
+  text-decoration: none;
+}
+.markdown a.internal-link:hover {
+  text-decoration: underline;
+}
+.markdown a.is-unresolved {
+  opacity: 0.6;
+}
+.markdown a.tag {
+  display: inline-block;
+  padding: 0 0.5em;
+  border-radius: 1em;
+  background: var(--text-selection);
+  font-size: 0.875em;
+  text-decoration: none;
+}
+
+.markdown mark {
+  background: rgba(255, 208, 0, 0.4);
+  color: inherit;
+  padding: 0 1px;
+}
+
+.markdown code {
+  font-family: var(--font-monospace);
+  font-size: 0.875em;
+  padding: 0.1em 0.3em;
+  border-radius: var(--radius-s);
+  background: var(--background-secondary);
+}
+.markdown pre {
+  padding: var(--size-4);
+  border-radius: var(--radius-m);
+  background: var(--background-secondary);
+  overflow-x: auto;
+}
+.markdown pre code {
+  padding: 0;
+  background: none;
+}
+.markdown pre.mermaid-src {
+  font-family: var(--font-monospace);
+  font-size: 0.875em;
+  white-space: pre-wrap;
+}
+.markdown pre.mermaid-error {
+  border-left: 3px solid var(--background-modifier-error);
+}
+.markdown .mermaid {
+  margin: 0 0 1em;
+  text-align: center;
+}
+.markdown .mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.markdown blockquote {
+  padding: 0 var(--size-5);
+  border-left: 3px solid var(--interactive-accent);
+  color: var(--text-muted);
+}
+
+.markdown table {
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+}
+.markdown th,
+.markdown td {
+  padding: var(--size-2) var(--size-4);
+  border: 1px solid var(--background-modifier-border);
+}
+.markdown th {
+  background: var(--background-secondary);
+  font-weight: 600;
+}
+
+.markdown img {
+  max-width: 100%;
+  height: auto;
+}
+
+.markdown hr {
+  border: 0;
+  border-top: 1px solid var(--background-modifier-border);
+  margin: 2em 0;
+}
+
+.markdown li.task-list-item {
+  list-style: none;
+}
+.markdown li.task-list-item > input[type='checkbox'] {
+  margin: 0 0.5em 0 -1.4em;
+  vertical-align: middle;
+}
+.markdown li.task-list-item > input[type='checkbox'][data-line] {
+  cursor: pointer;
+}
+
+.markdown .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.markdown section.footnotes {
+  margin-top: 2em;
+  font-size: 0.875em;
+  color: var(--text-muted);
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+/* Callouts */
+.markdown .callout {
+  --callout-color: 124, 58, 237;
+  margin: 0 0 1em;
+  padding: var(--size-4) var(--size-5);
+  border-radius: var(--radius-m);
+  border-left: 3px solid rgb(var(--callout-color));
+  background: rgba(var(--callout-color), 0.08);
+}
+.markdown .callout[data-callout='tip'],
+.markdown .callout[data-callout='hint'],
+.markdown .callout[data-callout='important'],
+.markdown .callout[data-callout='success'],
+.markdown .callout[data-callout='check'],
+.markdown .callout[data-callout='done'] {
+  --callout-color: 8, 185, 78;
+}
+.markdown .callout[data-callout='question'],
+.markdown .callout[data-callout='help'],
+.markdown .callout[data-callout='faq'],
+.markdown .callout[data-callout='warning'],
+.markdown .callout[data-callout='caution'],
+.markdown .callout[data-callout='attention'] {
+  --callout-color: 236, 117, 0;
+}
+.markdown .callout[data-callout='failure'],
+.markdown .callout[data-callout='fail'],
+.markdown .callout[data-callout='missing'],
+.markdown .callout[data-callout='danger'],
+.markdown .callout[data-callout='error'],
+.markdown .callout[data-callout='bug'] {
+  --callout-color: 233, 49, 71;
+}
+.markdown .callout[data-callout='note'],
+.markdown .callout[data-callout='info'],
+.markdown .callout[data-callout='todo'],
+.markdown .callout[data-callout='abstract'],
+.markdown .callout[data-callout='summary'],
+.markdown .callout[data-callout='tldr'] {
+  --callout-color: 8, 109, 221;
+}
+.markdown .callout[data-callout='quote'],
+.markdown .callout[data-callout='cite'],
+.markdown .callout[data-callout='example'] {
+  --callout-color: 120, 82, 238;
+}
+.markdown .callout-title {
+  font-weight: 600;
+  color: rgb(var(--callout-color));
+}
+.markdown .callout[data-fold='-'] > .callout-title,
+.markdown .callout[data-fold='+'] > .callout-title {
+  cursor: pointer;
+}
+.markdown .callout[data-fold='-'] > .callout-title::after,
+.markdown .callout[data-fold='+'] > .callout-title::after {
+  content: ' ▾';
+}
+.markdown .callout.is-collapsed > .callout-title::after {
+  content: ' ▸';
+}
+.markdown .callout.is-collapsed > .callout-content {
+  display: none;
+}
+.markdown .callout-content {
+  margin-top: var(--size-3);
+  color: var(--text-normal);
+}
+.markdown .callout-content > :last-child {
+  margin-bottom: 0;
+}
+
+/* Embeds */
+.markdown div.embed {
+  margin: 0 0 1em;
+}
+.markdown .embed-note {
+  padding: var(--size-3) var(--size-5);
+  border-left: 3px solid var(--background-modifier-border-focus);
+}
+.markdown .embed-note > .embed-link {
+  display: block;
+  margin-bottom: var(--size-3);
+  font-size: var(--font-ui-small);
+  color: var(--text-faint);
+}
+.markdown .embed-content > :last-child {
+  margin-bottom: 0;
+}
+.markdown .embed-pdf iframe {
+  width: 100%;
+  height: 70vh;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+}
+.markdown .embed-video video {
+  max-width: 100%;
+}
+.markdown .embed-audio audio {
+  width: min(480px, 100%);
+}
+.markdown .embed-notice {
+  margin: 0;
+  color: var(--text-faint);
+  font-style: italic;
+}
